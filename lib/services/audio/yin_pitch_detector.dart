@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:lattos_tuner/models/pitch_estimate.dart';
@@ -34,14 +35,40 @@ class YinPitchDetector {
   PitchEstimate? estimate(Float64List buffer) {
     assert(buffer.length >= bufferSize);
     _cumulativeMeanNormalizedDifference(buffer);
-    final tau = _absoluteThreshold();
+    var tau = _absoluteThreshold();
     if (tau == -1) return null;
+    tau = _octaveGuard(tau);
     final refinedTau = _parabolicInterpolation(tau);
     if (refinedTau <= 0) return null;
     return PitchEstimate(
       frequency: sampleRate / refinedTau,
       probability: (1.0 - _cmnd[tau]).clamp(0.0, 1.0),
     );
+  }
+
+  /// Proteção contra erro de oitava para cima, comum quando o microfone
+  /// corta o fundamental grave e o 2º harmônico domina: se o período dobrado
+  /// for *nitidamente* mais periódico que o encontrado, ele é o verdadeiro.
+  ///
+  /// Para um sinal detectado corretamente, o CMND em 2·tau é praticamente
+  /// igual ao de tau (todo múltiplo do período é periódico), então as
+  /// condições de margem absoluta e relativa não disparam.
+  int _octaveGuard(int tau) {
+    final doubled = 2 * tau;
+    if (doubled >= _halfSize - 1) return tau;
+    // Mínimo local em torno de 2·tau.
+    final radius = math.max(2, tau ~/ 8);
+    var best = doubled;
+    final start = math.max(1, doubled - radius);
+    final end = math.min(_halfSize - 1, doubled + radius);
+    for (var t = start; t <= end; t++) {
+      if (_cmnd[t] < _cmnd[best]) best = t;
+    }
+    final isClearlyBetter =
+        _cmnd[best] < threshold &&
+        _cmnd[tau] - _cmnd[best] > 0.025 &&
+        _cmnd[best] < _cmnd[tau] * 0.7;
+    return isClearlyBetter ? best : tau;
   }
 
   void _cumulativeMeanNormalizedDifference(Float64List x) {

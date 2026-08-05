@@ -121,14 +121,20 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lattos Tuner'**
+  /// **'Forever Tuner'**
   String get appTitle;
 
   /// No description provided for @tunerTitle.
   ///
   /// In en, this message translates to:
-  /// **'LATTOS TUNER'**
+  /// **'FOREVER TUNER'**
   String get tunerTitle;
+
+  /// No description provided for @tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Tune freely. No ads. Ever.'**
+  String get tagline;
 
   /// Tooltip of the calibration button in the app bar
   ///
@@ -247,7 +253,7 @@ abstract class AppLocalizations {
   /// No description provided for @permissionBody.
   ///
   /// In en, this message translates to:
-  /// **'To tune your instrument, Lattos Tuner needs to hear the strings. Grant microphone permission in your device settings.'**
+  /// **'To tune your instrument, Forever Tuner needs to hear the strings. Grant microphone permission in your device settings.'**
   String get permissionBody;
 
   /// No description provided for @permissionRetry.
@@ -273,6 +279,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore 440 Hz'**
   String get calibrationRestore;
+
+  /// No description provided for @calibrationListenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate with a reference tone'**
+  String get calibrationListenTitle;
+
+  /// No description provided for @calibrationListenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a steady reference tone nearby (tuning fork, piano, another tuner) and hold it.'**
+  String get calibrationListenHint;
+
+  /// No description provided for @calibrationListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get calibrationListening;
+
+  /// No description provided for @calibrationApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get calibrationApply;
 
   /// No description provided for @presetsTitle.
   ///

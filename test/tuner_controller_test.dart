@@ -132,6 +132,28 @@ void main() {
       expect(controller.mode, TargetMode.auto);
     });
 
+    test('histerese mantém "afinado" durante oscilações pequenas', () async {
+      final controller = await makeController();
+      for (var i = 0; i < TunerController.smoothingWindow; i++) {
+        controller.handleEstimate(estimateForNote('E2', centsOffset: 5));
+      }
+      expect(controller.reading!.status, TuningStatus.inTune);
+
+      // Oscila para +8 cents: acima da zona de entrada (6), mas dentro da
+      // zona de permanência (10) → continua afinado, sem piscar.
+      for (var i = 0; i < TunerController.smoothingWindow; i++) {
+        controller.handleEstimate(estimateForNote('E2', centsOffset: 8));
+      }
+      expect(controller.reading!.status, TuningStatus.inTune);
+
+      // Após silêncio (novo ataque), +8 direto não entra como afinado.
+      for (var i = 0; i < TunerController.silenceReadingsToClear; i++) {
+        controller.handleEstimate(null);
+      }
+      controller.handleEstimate(estimateForNote('E2', centsOffset: 8));
+      expect(controller.reading!.status, TuningStatus.slightlyHigh);
+    });
+
     test('silêncio prolongado limpa a leitura', () async {
       final controller = await makeController();
       controller.handleEstimate(estimateForNote('E2'));
@@ -271,11 +293,11 @@ void main() {
       expect(controller.capturedMidis, [nameToMidi('D2'), nameToMidi('A2')]);
     });
 
-    test('nota instável não é capturada', () async {
+    test('não captura sem leituras estáveis suficientes', () async {
       final controller = await makeChromaticController();
-      controller.handleEstimate(estimateForNote('D2'));
-      controller.handleEstimate(estimateForNote('D2', centsOffset: 40));
-      controller.handleEstimate(estimateForNote('D2'));
+      for (var i = 0; i < TunerController.stableReadingsToConfirm - 1; i++) {
+        controller.handleEstimate(estimateForNote('D2'));
+      }
       expect(controller.capturedMidis, isEmpty);
     });
 

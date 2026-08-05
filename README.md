@@ -1,4 +1,6 @@
-# Lattos Tuner 🎸
+# Forever Tuner 🎸
+
+> **Tune freely. No ads. Ever.**
 
 Afinador cromático em Flutter com **presets de afinação salvos** — incluindo a
 afinação **SOAD (Drop C)** — para afinar guitarra, violão, baixo, ukulele,
@@ -8,7 +10,26 @@ cavaquinho e o que mais você inventar.
 
 - **Detecção de pitch em tempo real** pelo microfone, usando o algoritmo
   **YIN** implementado em Dart puro (sem dependência de DSP externa), com
-  suavização por mediana e gate de silêncio.
+  mediana ponderada por confiança e gate de silêncio adaptativo.
+- **Robusto a microfones ruins de celular**:
+  - Captura com `VOICE_RECOGNITION` no Android (sem AGC/supressão de ruído
+    da fonte padrão) e flags de processamento desligados.
+  - Passa-altas de ~20 Hz contra rumble e offset DC.
+  - **Guarda de erro de oitava**: quando o mic corta o fundamental grave e o
+    2º harmônico domina, o detector reconhece o período dobrado.
+  - Gate de silêncio adaptativo ao piso de ruído do ambiente — mics pouco
+    sensíveis não ficam "surdos", ambientes barulhentos não alucinam nota.
+- **Fácil de cravar a afinação**: o ponteiro percorre uma fração da
+  diferença por leitura (calmo perto do alvo, instantâneo em mudanças
+  grandes), com **histerese** no estado afinado (entra a ±6 cents, só sai
+  acima de ±10) e zonas de tolerância visíveis no medidor (menta = afinado,
+  âmbar = quase lá).
+- **Calibração em duas vias**:
+  - Ajuste manual do A4 (415–466 Hz) com **passo fino de 0,1 Hz** e desvio
+    equivalente em cents.
+  - **Calibração por tom de referência**: toque um diapasão/piano/outro
+    afinador perto do aparelho; o app mede o desvio e corrige a referência
+    com um toque.
 - **Detecção inteligente de corda**: perto do alvo vale a proximidade; na
   zona ambígua entre duas cordas, a direção do movimento (apertando ou
   soltando a tarraxa) e o alvo anterior decidem — ao descer do padrão para
@@ -42,6 +63,12 @@ cavaquinho e o que mais você inventar.
   da afinação, medidor com ponteiro e escala que "acende", transições
   Material Motion (fade-through e shared-axis), efeitos Hero, entrada
   escalonada, haptics e Material 3.
+- **Identidade visual completa**: logo oficial (palheta + medidor) com
+  degradê menta→violeta e efeito neon, ícone de launcher (incluindo
+  adaptive icon Android e monocromático) e splash screen nativa (Android
+  12+ e iOS) gerados a partir de `assets/branding/` — recrie com
+  `dart run flutter_launcher_icons` e
+  `dart run flutter_native_splash:create --path=flutter_native_splash.yaml`.
 
 ## Como rodar
 

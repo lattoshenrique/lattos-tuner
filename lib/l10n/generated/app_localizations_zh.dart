@@ -9,10 +9,13 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Lattos Tuner';
+  String get appTitle => 'Forever Tuner';
 
   @override
-  String get tunerTitle => 'LATTOS TUNER';
+  String get tunerTitle => 'FOREVER TUNER';
+
+  @override
+  String get tagline => 'Tune freely. No ads. Ever.';
 
   @override
   String calibrationTooltip(int hz) {
@@ -74,7 +77,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get permissionTitle => '无法访问麦克风';
 
   @override
-  String get permissionBody => '要为乐器调音，Lattos Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。';
+  String get permissionBody => '要为乐器调音，Forever Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。';
 
   @override
   String get permissionRetry => '重试';
@@ -87,6 +90,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get calibrationRestore => '恢复 440 Hz';
+
+  @override
+  String get calibrationListenTitle => '使用参考音校准';
+
+  @override
+  String get calibrationListenHint => '在附近播放稳定的参考音（音叉、钢琴或其他调音器）并保持。';
+
+  @override
+  String get calibrationListening => '正在聆听…';
+
+  @override
+  String get calibrationApply => '应用';
 
   @override
   String get presetsTitle => '调音方案';

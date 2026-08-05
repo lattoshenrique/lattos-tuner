@@ -9,10 +9,13 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appTitle => 'Lattos Tuner';
+  String get appTitle => 'Forever Tuner';
 
   @override
-  String get tunerTitle => 'LATTOS TUNER';
+  String get tunerTitle => 'FOREVER TUNER';
+
+  @override
+  String get tagline => 'Tune freely. No ads. Ever.';
 
   @override
   String calibrationTooltip(int hz) {
@@ -76,7 +79,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      'Pour accorder votre instrument, Lattos Tuner doit entendre les cordes. Accordez la permission micro dans les réglages de l\'appareil.';
+      'Pour accorder votre instrument, Forever Tuner doit entendre les cordes. Accordez la permission micro dans les réglages de l\'appareil.';
 
   @override
   String get permissionRetry => 'Réessayer';
@@ -89,6 +92,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get calibrationRestore => 'Rétablir 440 Hz';
+
+  @override
+  String get calibrationListenTitle => 'Calibrer avec un son de référence';
+
+  @override
+  String get calibrationListenHint =>
+      'Jouez un son de référence stable à proximité (diapason, piano, autre accordeur) et tenez-le.';
+
+  @override
+  String get calibrationListening => 'Écoute…';
+
+  @override
+  String get calibrationApply => 'Appliquer';
 
   @override
   String get presetsTitle => 'Accordages';

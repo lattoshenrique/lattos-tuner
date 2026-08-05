@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:lattos_tuner/models/note.dart';
@@ -17,11 +18,23 @@ class TunerController extends ChangeNotifier {
   }) : _repository = repository,
        _pitchSource = pitchSource;
 
-  /// Desvio máximo, em cents, considerado afinado.
-  static const double inTuneCents = 5.0;
+  /// Desvio máximo, em cents, para ENTRAR no estado afinado.
+  static const double inTuneCents = 6.0;
+
+  /// Desvio máximo, em cents, para PERMANECER afinado (histerese: evita o
+  /// estado piscar quando a leitura oscila na borda da zona).
+  static const double exitInTuneCents = 10.0;
 
   /// Desvio máximo, em cents, considerado "quase lá".
   static const double slightlyOffCents = 15.0;
+
+  /// Fração da diferença que o ponteiro percorre por leitura: movimento
+  /// calmo perto do alvo, sem correr atrás de cada oscilação.
+  static const double displaySmoothingFactor = 0.35;
+
+  /// Diferença, em cents, a partir da qual o ponteiro salta direto
+  /// (mudança de nota ou correção grande — resposta imediata).
+  static const double displaySnapCents = 60.0;
 
   /// Quantas leituras consecutivas afinadas marcam a corda como concluída.
   static const int stableReadingsToConfirm = 3;
@@ -52,7 +65,10 @@ class TunerController extends ChangeNotifier {
 
   final PresetRepository _repository;
   final PitchSource _pitchSource;
-  final Queue<double> _recentFrequencies = Queue<double>();
+
+  /// Leituras recentes como (frequência, peso), onde o peso vem da
+  /// confiança do YIN — frames duvidosos pesam menos na mediana.
+  final Queue<(double, double)> _recentFrequencies = Queue<(double, double)>();
   final Queue<double> _trendFrequencies = Queue<double>();
   final List<int> _capturedMidis = <int>[];
 
@@ -63,6 +79,7 @@ class TunerController extends ChangeNotifier {
   TargetMode _mode = TargetMode.auto;
   int? _lockedStringIndex;
   TunerReading? _reading;
+  double? _displayFrequency;
   final Set<int> _tunedStrings = <int>{};
   int _silenceCount = 0;
   int _stableCount = 0;
@@ -154,9 +171,16 @@ class TunerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Referência mínima e máxima do A4, em Hz.
+  static const double minA4 = 415.0;
+  static const double maxA4 = 466.0;
+
   Future<void> setA4(double value) async {
-    _a4 = value;
-    await _repository.setA4Reference(value);
+    // Passo de 0,1 Hz: correções finas de calibração precisam de menos que
+    // os ~4 cents de um passo de 1 Hz.
+    final clamped = (value * 10).roundToDouble() / 10;
+    _a4 = clamped.clamp(minA4, maxA4);
+    await _repository.setA4Reference(_a4);
     _resetSession();
     notifyListeners();
   }
@@ -196,12 +220,13 @@ class TunerController extends ChangeNotifier {
     // Um salto grande de pitch significa outra corda/nota: a suavização e a
     // tendência da nota anterior deixam de valer.
     if (_recentFrequencies.isNotEmpty &&
-        centsBetween(estimate.frequency, _recentFrequencies.last).abs() >
+        centsBetween(estimate.frequency, _recentFrequencies.last.$1).abs() >
             noteJumpCents) {
       _recentFrequencies.clear();
       _trendFrequencies.clear();
     }
-    _recentFrequencies.addLast(estimate.frequency);
+    final weight = math.max(0.05, estimate.probability - 0.8);
+    _recentFrequencies.addLast((estimate.frequency, weight));
     while (_recentFrequencies.length > smoothingWindow) {
       _recentFrequencies.removeFirst();
     }
@@ -209,17 +234,47 @@ class TunerController extends ChangeNotifier {
     while (_trendFrequencies.length > trendWindow) {
       _trendFrequencies.removeFirst();
     }
-    final frequency = _medianFrequency();
+    final frequency = _smoothForDisplay(_medianFrequency());
     _reading = _buildReading(frequency);
     _trackStability(_reading!);
     notifyListeners();
   }
 
+  /// Aproximação suave do ponteiro: em vez de saltar para cada mediana, ele
+  /// percorre uma fração da diferença por leitura — perto do alvo o
+  /// movimento fica lento e fácil de acompanhar. Mudanças grandes (outra
+  /// corda, correção brusca) continuam instantâneas.
+  double _smoothForDisplay(double median) {
+    final previous = _displayFrequency;
+    double frequency;
+    if (previous == null) {
+      frequency = median;
+    } else {
+      final deltaCents = centsBetween(median, previous);
+      if (deltaCents.abs() >= displaySnapCents) {
+        frequency = median;
+      } else {
+        frequency =
+            previous *
+            math.pow(2.0, deltaCents * displaySmoothingFactor / 1200.0);
+      }
+    }
+    _displayFrequency = frequency;
+    return frequency;
+  }
+
+  /// Mediana ponderada pela confiança: a frequência onde o peso acumulado
+  /// cruza a metade do total.
   double _medianFrequency() {
-    final sorted = _recentFrequencies.toList()..sort();
-    final middle = sorted.length ~/ 2;
-    if (sorted.length.isOdd) return sorted[middle];
-    return (sorted[middle - 1] + sorted[middle]) / 2.0;
+    final sorted = _recentFrequencies.toList()
+      ..sort((a, b) => a.$1.compareTo(b.$1));
+    final totalWeight = sorted.fold(0.0, (sum, s) => sum + s.$2);
+    var cumulative = 0.0;
+    for (final sample in sorted) {
+      cumulative += sample.$2;
+      if (cumulative >= totalWeight / 2) return sample.$1;
+    }
+    return sorted.last.$1;
   }
 
   TunerReading _buildReading(double frequency) {
@@ -298,7 +353,11 @@ class TunerController extends ChangeNotifier {
   }
 
   TuningStatus _statusForCents(double cents) {
-    if (cents.abs() <= inTuneCents) return TuningStatus.inTune;
+    // Histerese: quem já está afinado só perde o status com um desvio
+    // maior, evitando o vai-e-vem na borda da zona.
+    final wasInTune = _reading?.status == TuningStatus.inTune;
+    final tolerance = wasInTune ? exitInTuneCents : inTuneCents;
+    if (cents.abs() <= tolerance) return TuningStatus.inTune;
     if (cents <= -slightlyOffCents) return TuningStatus.tooLow;
     if (cents >= slightlyOffCents) return TuningStatus.tooHigh;
     return cents < 0 ? TuningStatus.slightlyLow : TuningStatus.slightlyHigh;
@@ -342,6 +401,7 @@ class TunerController extends ChangeNotifier {
 
   void _clearReading() {
     _reading = null;
+    _displayFrequency = null;
     _recentFrequencies.clear();
     _trendFrequencies.clear();
     _silenceCount = 0;

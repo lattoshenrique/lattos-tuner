@@ -9,10 +9,13 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => 'Lattos Tuner';
+  String get appTitle => 'Forever Tuner';
 
   @override
-  String get tunerTitle => 'LATTOS TUNER';
+  String get tunerTitle => 'FOREVER TUNER';
+
+  @override
+  String get tagline => 'Tune freely. No ads. Ever.';
 
   @override
   String calibrationTooltip(int hz) {
@@ -76,7 +79,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      '악기를 조율하려면 Lattos Tuner가 줄 소리를 들어야 합니다. 기기 설정에서 마이크 권한을 허용해 주세요.';
+      '악기를 조율하려면 Forever Tuner가 줄 소리를 들어야 합니다. 기기 설정에서 마이크 권한을 허용해 주세요.';
 
   @override
   String get permissionRetry => '다시 시도';
@@ -89,6 +92,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get calibrationRestore => '440 Hz로 복원';
+
+  @override
+  String get calibrationListenTitle => '기준음으로 보정';
+
+  @override
+  String get calibrationListenHint =>
+      '근처에서 기준음(소리굽쇠, 피아노, 다른 튜너)을 안정적으로 지속해서 울려 주세요.';
+
+  @override
+  String get calibrationListening => '듣는 중…';
+
+  @override
+  String get calibrationApply => '적용';
 
   @override
   String get presetsTitle => '튜닝';

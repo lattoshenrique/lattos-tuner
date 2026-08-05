@@ -9,10 +9,13 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appTitle => 'Lattos Tuner';
+  String get appTitle => 'Forever Tuner';
 
   @override
-  String get tunerTitle => 'LATTOS TUNER';
+  String get tunerTitle => 'FOREVER TUNER';
+
+  @override
+  String get tagline => 'Tune freely. No ads. Ever.';
 
   @override
   String calibrationTooltip(int hz) {
@@ -76,7 +79,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      'वाद्य को ट्यून करने के लिए Lattos Tuner को तारों की आवाज़ सुननी होगी। डिवाइस सेटिंग में माइक्रोफ़ोन की अनुमति दें।';
+      'वाद्य को ट्यून करने के लिए Forever Tuner को तारों की आवाज़ सुननी होगी। डिवाइस सेटिंग में माइक्रोफ़ोन की अनुमति दें।';
 
   @override
   String get permissionRetry => 'फिर से कोशिश करें';
@@ -89,6 +92,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get calibrationRestore => '440 Hz बहाल करें';
+
+  @override
+  String get calibrationListenTitle => 'संदर्भ स्वर से कैलिब्रेट करें';
+
+  @override
+  String get calibrationListenHint =>
+      'पास में एक स्थिर संदर्भ स्वर बजाएँ (ट्यूनिंग फोर्क, पियानो, दूसरा ट्यूनर) और उसे बनाए रखें।';
+
+  @override
+  String get calibrationListening => 'सुन रहा है…';
+
+  @override
+  String get calibrationApply => 'लागू करें';
 
   @override
   String get presetsTitle => 'ट्यूनिंग';

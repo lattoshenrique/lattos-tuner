@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/views/theme.dart';
 
 /// Medidor em arco com ponteiro animado e escala de cents (-50 a +50).
@@ -30,7 +31,7 @@ class TunerGauge extends StatelessWidget {
     final target = (cents ?? 0.0).clamp(-50.0, 50.0);
     return TweenAnimationBuilder<double>(
       tween: Tween(end: target),
-      duration: const Duration(milliseconds: 160),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       builder: (context, animatedCents, _) {
         return AnimatedOpacity(
@@ -89,16 +90,39 @@ class _GaugePainter extends CustomPainter {
     final arcRect = Rect.fromCircle(center: pivot, radius: radius);
     canvas.drawArc(arcRect, startAngle - math.pi / 2, sweep, false, track);
 
-    // Zona "afinado" (±5 cents) destacada no trilho.
-    final zone = Paint()
+    // Zonas de tolerância no trilho, alinhadas com o controller:
+    // âmbar = "quase lá" (entre inTuneCents e slightlyOffCents, dos dois
+    // lados) e menta = "afinado" (±inTuneCents).
+    const inTune = TunerController.inTuneCents;
+    const slightlyOff = TunerController.slightlyOffCents;
+    final nearZone = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round
-      ..color = AppColors.mint.withValues(alpha: 0.5);
+      ..color = AppColors.amber.withValues(alpha: 0.38);
     canvas.drawArc(
       arcRect,
-      _angleForCents(-5) - math.pi / 2,
-      _angleForCents(5) - _angleForCents(-5),
+      _angleForCents(-slightlyOff) - math.pi / 2,
+      _angleForCents(-inTune) - _angleForCents(-slightlyOff),
+      false,
+      nearZone,
+    );
+    canvas.drawArc(
+      arcRect,
+      _angleForCents(inTune) - math.pi / 2,
+      _angleForCents(slightlyOff) - _angleForCents(inTune),
+      false,
+      nearZone,
+    );
+    final zone = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round
+      ..color = AppColors.mint.withValues(alpha: 0.6);
+    canvas.drawArc(
+      arcRect,
+      _angleForCents(-inTune) - math.pi / 2,
+      _angleForCents(inTune) - _angleForCents(-inTune),
       false,
       zone,
     );

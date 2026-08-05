@@ -76,6 +76,25 @@ void main() {
       expect(estimate.probability, greaterThan(0.85));
     });
 
+    test('corrige erro de oitava com fundamental fraco (mic ruim)', () {
+      // Fundamental quase ausente e 2º harmônico dominante — típico de
+      // microfones de celular que cortam graves.
+      final buffer = sineWave(
+        82.407,
+        sampleRate,
+        bufferSize,
+        amplitude: 0.04,
+        harmonics: [0.5, 0.07],
+      );
+      final estimate = detector.estimate(buffer);
+      expect(estimate, isNotNull);
+      expect(
+        centsBetween(estimate!.frequency, 82.407).abs(),
+        lessThan(5.0),
+        reason: 'detectou ${estimate.frequency} Hz em vez de ~82,4 Hz',
+      );
+    });
+
     test('retorna null para silêncio', () {
       expect(detector.estimate(Float64List(bufferSize)), isNull);
     });

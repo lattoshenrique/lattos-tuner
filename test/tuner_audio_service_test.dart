@@ -47,6 +47,28 @@ void main() {
       }
     });
 
+    test('detecta sinal fraco (microfone pouco sensível)', () async {
+      final service = TunerAudioService();
+      final estimates = <PitchEstimate?>[];
+      final subscription = service.pitchStream.listen(estimates.add);
+
+      // Amplitude bem abaixo do antigo gate fixo de RMS.
+      final audio = pcm16Sine(
+        110.0,
+        TunerAudioService.captureSampleRate,
+        amplitude: 0.006,
+      );
+      service.processChunk(audio);
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+
+      final detected = estimates.whereType<PitchEstimate>().toList();
+      expect(detected, isNotEmpty);
+      for (final estimate in detected) {
+        expect(centsBetween(estimate.frequency, 110.0).abs(), lessThan(3.0));
+      }
+    });
+
     test('emite null para silêncio', () async {
       final service = TunerAudioService();
       final estimates = <PitchEstimate?>[];

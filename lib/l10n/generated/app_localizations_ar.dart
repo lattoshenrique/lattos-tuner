@@ -9,10 +9,13 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'Lattos Tuner';
+  String get appTitle => 'Forever Tuner';
 
   @override
-  String get tunerTitle => 'LATTOS TUNER';
+  String get tunerTitle => 'FOREVER TUNER';
+
+  @override
+  String get tagline => 'Tune freely. No ads. Ever.';
 
   @override
   String calibrationTooltip(int hz) {
@@ -76,7 +79,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      'لضبط آلتك، يحتاج Lattos Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.';
+      'لضبط آلتك، يحتاج Forever Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.';
 
   @override
   String get permissionRetry => 'إعادة المحاولة';
@@ -89,6 +92,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calibrationRestore => 'استعادة 440 هرتز';
+
+  @override
+  String get calibrationListenTitle => 'المعايرة بنغمة مرجعية';
+
+  @override
+  String get calibrationListenHint =>
+      'شغّل نغمة مرجعية ثابتة بالقرب من الجهاز (شوكة رنانة، بيانو، موالف آخر) وأبقها مستمرة.';
+
+  @override
+  String get calibrationListening => 'يستمع…';
+
+  @override
+  String get calibrationApply => 'تطبيق';
 
   @override
   String get presetsTitle => 'الدوزانات';

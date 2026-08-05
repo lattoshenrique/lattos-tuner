@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
@@ -169,7 +171,21 @@ class _TunerScreenState extends State<TunerScreen>
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: Text(context.l10n.tunerTitle),
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(context.l10n.tunerTitle),
+                Text(
+                  context.l10n.tagline,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                    color: AppColors.textSecondary.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
             actions: [
               IconButton(
                 tooltip: context.l10n.calibrationTooltip(controller.a4.round()),
@@ -791,27 +807,109 @@ class _CalibrationSheet extends StatefulWidget {
 }
 
 class _CalibrationSheetState extends State<_CalibrationSheet> {
+  /// Janela de desvios (em cents) medidos no modo "calibrar ouvindo".
+  static const int _listenWindow = 8;
+
+  /// Dispersão máxima, em cents, para considerar o tom estável.
+  static const double _stableSpreadCents = 5.0;
+
   late double _value = widget.controller.a4;
+  final List<double> _measuredCents = <double>[];
+  double? _measuredFrequency;
+  int? _measuredMidi;
+
+  TunerController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addListener(_onReading);
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(_onReading);
+    super.dispose();
+  }
+
+  void _onReading() {
+    if (!mounted) return;
+    final reading = controller.reading;
+    if (reading == null) {
+      if (_measuredFrequency != null) {
+        setState(() {
+          _measuredCents.clear();
+          _measuredFrequency = null;
+          _measuredMidi = null;
+        });
+      }
+      return;
+    }
+    // Desvio da nota cromática mais próxima sob a calibração atual: se o tom
+    // de referência é confiável, esse desvio É o erro de calibração.
+    final midi = frequencyToMidi(reading.frequency, a4: controller.a4);
+    final nearest = midi.round();
+    setState(() {
+      _measuredCents.add((midi - nearest) * 100.0);
+      while (_measuredCents.length > _listenWindow) {
+        _measuredCents.removeAt(0);
+      }
+      _measuredFrequency = reading.frequency;
+      _measuredMidi = nearest;
+    });
+  }
+
+  bool get _isStable {
+    if (_measuredCents.length < _listenWindow ~/ 2 + 2) return false;
+    final sorted = List.of(_measuredCents)..sort();
+    return sorted.last - sorted.first <= _stableSpreadCents;
+  }
+
+  double get _medianMeasuredCents {
+    final sorted = List.of(_measuredCents)..sort();
+    return sorted[sorted.length ~/ 2];
+  }
+
+  void _setA4(double value) {
+    HapticFeedback.selectionClick();
+    setState(
+      () => _value = value.clamp(TunerController.minA4, TunerController.maxA4),
+    );
+    controller.setA4(_value);
+  }
+
+  void _applyMeasured() {
+    final correction = math.pow(2.0, _medianMeasuredCents / 1200.0);
+    HapticFeedback.mediumImpact();
+    _setA4(controller.a4 * correction);
+    _measuredCents.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final offsetFrom440 = 1200.0 * math.log(_value / 440.0) / math.ln2;
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outline,
-                borderRadius: BorderRadius.circular(2),
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.outline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
               context.l10n.calibrationTitle,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -821,48 +919,181 @@ class _CalibrationSheetState extends State<_CalibrationSheet> {
             const SizedBox(height: 4),
             Text(
               context.l10n.calibrationSubtitle,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 13,
               ),
             ),
-            const SizedBox(height: 16),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) =>
-                  ScaleTransition(scale: animation, child: child),
-              child: Text(
-                '${_value.round()} ${context.l10n.hzUnit}',
-                key: ValueKey(_value.round()),
-                style: const TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.mint,
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.filledTonal(
+                  onPressed: () => _setA4(_value - 0.1),
+                  tooltip: '−0,1 ${context.l10n.hzUnit}',
+                  icon: const Icon(Icons.remove_rounded),
                 ),
-              ),
+                SizedBox(
+                  width: 170,
+                  child: Column(
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Text(
+                          '${formatDecimal(_value, locale)} '
+                          '${context.l10n.hzUnit}',
+                          key: ValueKey((_value * 10).round()),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.mint,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${offsetFrom440 < 0 ? '−' : '+'}'
+                        '${formatDecimal(offsetFrom440.abs(), locale)} '
+                        '${context.l10n.centsUnit}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton.filledTonal(
+                  onPressed: () => _setA4(_value + 0.1),
+                  tooltip: '+0,1 ${context.l10n.hzUnit}',
+                  icon: const Icon(Icons.add_rounded),
+                ),
+              ],
             ),
             Slider(
-              value: _value.roundToDouble(),
+              value: _value.clamp(415, 466),
               min: 415,
               max: 466,
-              divisions: 51,
               activeColor: AppColors.mint,
               onChanged: (value) {
-                if (value.round() != _value.round()) {
-                  HapticFeedback.selectionClick();
-                }
-                setState(() => _value = value);
+                final snapped = (value * 10).roundToDouble() / 10;
+                if (snapped != _value) HapticFeedback.selectionClick();
+                setState(() => _value = snapped);
               },
-              onChangeEnd: (value) =>
-                  widget.controller.setA4(value.roundToDouble()),
+              onChangeEnd: (value) => controller.setA4(_value),
             ),
-            TextButton.icon(
-              onPressed: () {
-                setState(() => _value = 440);
-                widget.controller.setA4(440);
-              },
-              icon: const Icon(Icons.restart_alt_rounded, size: 18),
-              label: Text(context.l10n.calibrationRestore),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => _setA4(440),
+                icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                label: Text(context.l10n.calibrationRestore),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.graphic_eq_rounded,
+                  size: 18,
+                  color: AppColors.violet,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.calibrationListenTitle,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.calibrationListenHint,
+              style: const TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBright,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: _isStable
+                      ? AppColors.mint.withValues(alpha: 0.6)
+                      : AppColors.outline,
+                ),
+              ),
+              child: _measuredFrequency == null
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.hearing_rounded,
+                          size: 18,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.l10n.calibrationListening,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        Text(
+                          '${midiToName(_measuredMidi!)} · '
+                          '${formatDecimal(_measuredFrequency!, locale)} '
+                          '${context.l10n.hzUnit}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${_medianMeasuredCents < 0 ? '−' : '+'}'
+                          '${formatDecimal(_medianMeasuredCents.abs(), locale)} '
+                          '${context.l10n.centsUnit}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _isStable
+                                ? AppColors.mint
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          onPressed: _isStable ? _applyMeasured : null,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.mint,
+                            foregroundColor: const Color(0xFF04291C),
+                          ),
+                          icon: const Icon(Icons.check_rounded, size: 18),
+                          label: Text(context.l10n.calibrationApply),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),

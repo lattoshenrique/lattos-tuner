@@ -42,6 +42,9 @@ void main() {
         l10n.newPreset,
         l10n.permissionBody,
         l10n.calibrationTitle,
+        l10n.calibrationListenTitle,
+        l10n.calibrationApply,
+        l10n.tagline,
       ]) {
         expect(value.trim(), isNotEmpty, reason: 'string vazia em $code');
       }
