@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lattos_tuner/models/audio_frame.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/pitch_estimate.dart';
 import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
@@ -67,6 +68,36 @@ void main() {
       for (final estimate in detected) {
         expect(centsBetween(estimate.frequency, 110.0).abs(), lessThan(3.0));
       }
+    });
+
+    test('publica quadros de áudio com energia e espectro reais', () async {
+      final service = TunerAudioService();
+      final frames = <AudioFrame>[];
+      final subscription = service.audioStream.listen(frames.add);
+
+      service.processChunk(
+        pcm16Sine(220.0, TunerAudioService.captureSampleRate),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(frames, isNotEmpty);
+      final loud = frames.where((frame) => frame.frequency != null).toList();
+      expect(loud, isNotEmpty);
+      for (final frame in loud) {
+        expect(frame.level, greaterThan(0.5));
+        // A energia se concentra nos graves/médios, não nos agudos.
+        expect(frame.bandRange(0, 12), greaterThan(frame.bandRange(12, 12)));
+      }
+
+      // Silêncio depois do tom: nível e bandas voltam ao chão.
+      frames.clear();
+      service.processChunk(Uint8List(TunerAudioService.captureSampleRate));
+      await Future<void>.delayed(Duration.zero);
+      await subscription.cancel();
+
+      expect(frames, isNotEmpty);
+      expect(frames.last.level, lessThan(0.2));
+      expect(frames.last.frequency, isNull);
     });
 
     test('emite null para silêncio', () async {

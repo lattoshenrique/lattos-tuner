@@ -1,7 +1,7 @@
 {
   "@@locale": "es",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "Calibración (A4 = {hz} Hz)",
   "presetsTooltip": "Presets de afinación",
@@ -22,7 +22,7 @@
   "hzUnit": "Hz",
   "centsUnit": "cents",
   "permissionTitle": "Sin acceso al micrófono",
-  "permissionBody": "Para afinar tu instrumento, Forever Tuner necesita escuchar las cuerdas. Concede el permiso de micrófono en los ajustes del dispositivo.",
+  "permissionBody": "Para afinar tu instrumento, NoAd Tuner necesita escuchar las cuerdas. Concede el permiso de micrófono en los ajustes del dispositivo.",
   "permissionRetry": "Reintentar",
   "calibrationTitle": "Calibración de referencia",
   "calibrationSubtitle": "Frecuencia del A4 (por defecto: 440 Hz)",

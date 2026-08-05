@@ -9,10 +9,10 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'Forever Tuner';
+  String get appTitle => 'NoAd Tuner';
 
   @override
-  String get tunerTitle => 'FOREVER TUNER';
+  String get tunerTitle => 'NOAD TUNER';
 
   @override
   String get tagline => 'Tune freely. No ads. Ever.';
@@ -79,7 +79,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      'لضبط آلتك، يحتاج Forever Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.';
+      'لضبط آلتك، يحتاج NoAd Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.';
 
   @override
   String get permissionRetry => 'إعادة المحاولة';

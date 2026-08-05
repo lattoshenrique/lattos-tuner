@@ -1,7 +1,7 @@
 {
   "@@locale": "ja",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "キャリブレーション（A4 = {hz} Hz）",
   "presetsTooltip": "チューニングプリセット",
@@ -22,7 +22,7 @@
   "hzUnit": "Hz",
   "centsUnit": "セント",
   "permissionTitle": "マイクにアクセスできません",
-  "permissionBody": "楽器をチューニングするには、Forever Tuner が弦の音を聞く必要があります。端末の設定でマイクの権限を許可してください。",
+  "permissionBody": "楽器をチューニングするには、NoAd Tuner が弦の音を聞く必要があります。端末の設定でマイクの権限を許可してください。",
   "permissionRetry": "再試行",
   "calibrationTitle": "基準ピッチの調整",
   "calibrationSubtitle": "A4 の周波数（デフォルト: 440 Hz）",

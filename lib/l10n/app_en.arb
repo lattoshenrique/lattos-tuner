@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "Calibration (A4 = {hz} Hz)",
   "@calibrationTooltip": {
@@ -30,7 +30,7 @@
   "hzUnit": "Hz",
   "centsUnit": "cents",
   "permissionTitle": "No microphone access",
-  "permissionBody": "To tune your instrument, Forever Tuner needs to hear the strings. Grant microphone permission in your device settings.",
+  "permissionBody": "To tune your instrument, NoAd Tuner needs to hear the strings. Grant microphone permission in your device settings.",
   "permissionRetry": "Try again",
   "calibrationTitle": "Reference calibration",
   "calibrationSubtitle": "A4 frequency (default: 440 Hz)",

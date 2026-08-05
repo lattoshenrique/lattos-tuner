@@ -1,7 +1,7 @@
 {
   "@@locale": "ar",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "المعايرة (A4 = {hz} هرتز)",
   "presetsTooltip": "إعدادات الدوزان المسبقة",
@@ -22,7 +22,7 @@
   "hzUnit": "هرتز",
   "centsUnit": "سنت",
   "permissionTitle": "لا يمكن الوصول إلى الميكروفون",
-  "permissionBody": "لضبط آلتك، يحتاج Forever Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.",
+  "permissionBody": "لضبط آلتك، يحتاج NoAd Tuner إلى سماع الأوتار. امنح إذن الميكروفون من إعدادات الجهاز.",
   "permissionRetry": "إعادة المحاولة",
   "calibrationTitle": "معايرة المرجع",
   "calibrationSubtitle": "تردد A4 (الافتراضي: 440 هرتز)",

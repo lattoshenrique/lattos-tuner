@@ -9,10 +9,10 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => 'Forever Tuner';
+  String get appTitle => 'NoAd Tuner';
 
   @override
-  String get tunerTitle => 'FOREVER TUNER';
+  String get tunerTitle => 'NOAD TUNER';
 
   @override
   String get tagline => 'Tune freely. No ads. Ever.';
@@ -79,7 +79,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get permissionBody =>
-      '악기를 조율하려면 Forever Tuner가 줄 소리를 들어야 합니다. 기기 설정에서 마이크 권한을 허용해 주세요.';
+      '악기를 조율하려면 NoAd Tuner가 줄 소리를 들어야 합니다. 기기 설정에서 마이크 권한을 허용해 주세요.';
 
   @override
   String get permissionRetry => '다시 시도';

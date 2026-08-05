@@ -9,10 +9,10 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Forever Tuner';
+  String get appTitle => 'NoAd Tuner';
 
   @override
-  String get tunerTitle => 'FOREVER TUNER';
+  String get tunerTitle => 'NOAD TUNER';
 
   @override
   String get tagline => 'Tune freely. No ads. Ever.';
@@ -77,7 +77,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get permissionTitle => '无法访问麦克风';
 
   @override
-  String get permissionBody => '要为乐器调音，Forever Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。';
+  String get permissionBody => '要为乐器调音，NoAd Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。';
 
   @override
   String get permissionRetry => '重试';

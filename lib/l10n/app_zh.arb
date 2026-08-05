@@ -1,7 +1,7 @@
 {
   "@@locale": "zh",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "校准（A4 = {hz} Hz）",
   "presetsTooltip": "调音预设",
@@ -22,7 +22,7 @@
   "hzUnit": "Hz",
   "centsUnit": "音分",
   "permissionTitle": "无法访问麦克风",
-  "permissionBody": "要为乐器调音，Forever Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。",
+  "permissionBody": "要为乐器调音，NoAd Tuner 需要听到琴弦的声音。请在设备设置中授予麦克风权限。",
   "permissionRetry": "重试",
   "calibrationTitle": "基准音校准",
   "calibrationSubtitle": "A4 频率（默认：440 Hz）",

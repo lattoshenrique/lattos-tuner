@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:lattos_tuner/models/audio_frame.dart';
 import 'package:lattos_tuner/models/pitch_estimate.dart';
+import 'package:lattos_tuner/services/audio/spectrum_analyzer.dart';
 import 'package:lattos_tuner/services/audio/yin_pitch_detector.dart';
 import 'package:record/record.dart';
 
@@ -12,6 +14,10 @@ abstract class PitchSource {
   /// Emite uma estimativa por janela de análise; null significa silêncio ou
   /// ausência de pitch detectável.
   Stream<PitchEstimate?> get pitchStream;
+
+  /// Emite um quadro por janela de análise, com energia e espectro do áudio
+  /// real — inclusive quando não há pitch. Alimenta as visualizações.
+  Stream<AudioFrame> get audioStream;
 
   Future<bool> start();
 
@@ -57,8 +63,15 @@ class TunerAudioService implements PitchSource {
     bufferSize: analysisBufferSize,
   );
 
+  final SpectrumAnalyzer _spectrum = SpectrumAnalyzer(
+    sampleRate: analysisSampleRate.toDouble(),
+    fftSize: analysisBufferSize,
+  );
+
   final StreamController<PitchEstimate?> _pitchController =
       StreamController<PitchEstimate?>.broadcast();
+  final StreamController<AudioFrame> _audioController =
+      StreamController<AudioFrame>.broadcast();
   final List<double> _window = <double>[];
   StreamSubscription<Uint8List>? _subscription;
   double? _pendingSample;
@@ -70,6 +83,9 @@ class TunerAudioService implements PitchSource {
 
   @override
   Stream<PitchEstimate?> get pitchStream => _pitchController.stream;
+
+  @override
+  Stream<AudioFrame> get audioStream => _audioController.stream;
 
   bool get isRunning => _running;
 
@@ -121,6 +137,7 @@ class TunerAudioService implements PitchSource {
     await stop();
     await _recorder?.dispose();
     await _pitchController.close();
+    await _audioController.close();
   }
 
   /// Processa um bloco PCM16 little-endian mono. Exposto para testes.
@@ -172,6 +189,7 @@ class TunerAudioService implements PitchSource {
     }
     final rms = math.sqrt(sumSquares / analysisBufferSize);
     if (rms < absoluteMinRms) {
+      _emitFrame(rms: rms, buffer: null, accepted: null);
       _pitchController.add(null);
       return;
     }
@@ -182,15 +200,39 @@ class TunerAudioService implements PitchSource {
       // Janela com energia mas sem periodicidade: é ruído — atualiza o piso
       // usado pelo gate adaptativo.
       _noiseFloor = (_noiseFloor * 0.9 + rms * 0.1).clamp(absoluteMinRms, 0.2);
+      // Ruído ainda tem espectro: a visualização reage a ele, o afinador não.
+      _emitFrame(rms: rms, buffer: buffer, accepted: null);
       _pitchController.add(null);
       return;
     }
     // Gate adaptativo: exige que o sinal periódico esteja acima do piso de
     // ruído do ambiente, sem penalizar microfones pouco sensíveis.
     if (rms < _noiseFloor * noiseGateFactor) {
+      _emitFrame(rms: rms, buffer: buffer, accepted: null);
       _pitchController.add(null);
       return;
     }
+    _emitFrame(rms: rms, buffer: buffer, accepted: estimate);
     _pitchController.add(estimate);
+  }
+
+  /// Publica o retrato visual da janela. Sem ouvintes, pula a FFT — a
+  /// visualização é a única consumidora e ela nem sempre está montada.
+  void _emitFrame({
+    required double rms,
+    required Float64List? buffer,
+    required PitchEstimate? accepted,
+  }) {
+    if (!_audioController.hasListener) return;
+    _audioController.add(
+      AudioFrame(
+        level: _spectrum.levelFromRms(rms),
+        frequency: accepted?.frequency,
+        clarity: accepted?.probability ?? 0,
+        bands: buffer == null
+            ? Float64List(AudioFrame.bandCount)
+            : _spectrum.analyze(buffer),
+      ),
+    );
   }
 }

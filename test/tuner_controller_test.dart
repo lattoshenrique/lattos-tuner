@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
+import 'package:lattos_tuner/models/audio_frame.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/pitch_estimate.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
@@ -13,11 +14,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FakePitchSource implements PitchSource {
   final StreamController<PitchEstimate?> controller =
       StreamController<PitchEstimate?>.broadcast();
+  final StreamController<AudioFrame> frames =
+      StreamController<AudioFrame>.broadcast();
   bool grantPermission = true;
   bool started = false;
 
   @override
   Stream<PitchEstimate?> get pitchStream => controller.stream;
+
+  @override
+  Stream<AudioFrame> get audioStream => frames.stream;
 
   @override
   Future<bool> start() async {

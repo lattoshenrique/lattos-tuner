@@ -180,54 +180,6 @@ class _TunerScreenState extends State<TunerScreen>
         final accent = statusColor(status);
         final chromatic = controller.mode == TargetMode.chromatic;
         return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            // scaleDown mantém marca e wordmark inteiros mesmo em telas
-            // estreitas ou com traduções mais longas.
-            title: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/branding/logo_mark.png',
-                    width: 32,
-                    height: 32,
-                  ),
-                  const SizedBox(width: 9),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(context.l10n.tunerTitle),
-                      Text(
-                        context.l10n.tagline,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                          color: AppColors.textSecondary.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              IconButton(
-                tooltip: context.l10n.calibrationTooltip(controller.a4.round()),
-                icon: const Icon(Icons.tune_rounded),
-                onPressed: _openCalibration,
-              ),
-              IconButton(
-                tooltip: context.l10n.presetsTooltip,
-                icon: const Icon(Icons.library_music_rounded),
-                onPressed: _openPresets,
-              ),
-              const SizedBox(width: 4),
-            ],
-          ),
           body: Stack(
             fit: StackFit.expand,
             children: [
@@ -245,16 +197,25 @@ class _TunerScreenState extends State<TunerScreen>
                   ),
                 ),
               ),
-              AuroraBackground(accent: accent),
+              AuroraBackground(accent: accent, audio: controller.audioFrame),
               SafeArea(
                 child: controller.permissionDenied
                     ? _PermissionDeniedView(onRetry: controller.start)
                     : Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
                         child: Column(
                           children: [
                             _entranceSlot(
                               0,
+                              _BrandBar(
+                                controller: controller,
+                                onCalibration: _openCalibration,
+                                onPresets: _openPresets,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            _entranceSlot(
+                              1,
                               _PresetCard(
                                 controller: controller,
                                 onTap: _openPresets,
@@ -264,57 +225,63 @@ class _TunerScreenState extends State<TunerScreen>
                               // O bloco central tem tamanho natural fixo; em
                               // telas curtas ele encolhe junto em vez de
                               // estourar, e em telas largas o medidor para
-                              // de crescer.
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _entranceSlot(
-                                      1,
-                                      SizedBox(
-                                        width: 340,
-                                        child: TunerGauge(
-                                          cents: reading?.cents,
-                                          color: accent,
-                                          active: controller.isRunning,
+                              // de crescer. O padding garante respiro mínimo
+                              // entre ele, o preset e o painel de baixo.
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _entranceSlot(
+                                        2,
+                                        SizedBox(
+                                          width: 340,
+                                          child: TunerGauge(
+                                            cents: reading?.cents,
+                                            color: accent,
+                                            active: controller.isRunning,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _entranceSlot(
-                                      2,
-                                      NoteDisplay(
-                                        noteName: reading == null
-                                            ? null
-                                            : kNoteNames[reading.targetMidi %
-                                                  12],
-                                        octave: reading == null
-                                            ? null
-                                            : (reading.targetMidi ~/ 12) - 1,
-                                        color: accent,
-                                        inTune: status == TuningStatus.inTune,
+                                      const SizedBox(height: 18),
+                                      _entranceSlot(
+                                        3,
+                                        NoteDisplay(
+                                          noteName: reading == null
+                                              ? null
+                                              : kNoteNames[reading.targetMidi %
+                                                    12],
+                                          octave: reading == null
+                                              ? null
+                                              : (reading.targetMidi ~/ 12) - 1,
+                                          color: accent,
+                                          inTune: status == TuningStatus.inTune,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _entranceSlot(
-                                      3,
-                                      _ReadoutRow(reading: reading),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _entranceSlot(
-                                      4,
-                                      _StatusPill(
-                                        controller: controller,
-                                        accent: accent,
+                                      const SizedBox(height: 12),
+                                      _entranceSlot(
+                                        4,
+                                        _ReadoutRow(reading: reading),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 26),
+                                      _entranceSlot(
+                                        5,
+                                        _StatusPill(
+                                          controller: controller,
+                                          accent: accent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                             _entranceSlot(
-                              5,
+                              6,
                               ClipRect(
                                 child: AnimatedSize(
                                   duration: const Duration(milliseconds: 350),
@@ -343,9 +310,9 @@ class _TunerScreenState extends State<TunerScreen>
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 22),
                             _entranceSlot(
-                              6,
+                              7,
                               SegmentedButton<bool>(
                                 segments: [
                                   ButtonSegment(
@@ -379,6 +346,10 @@ class _TunerScreenState extends State<TunerScreen>
                                   side: const BorderSide(
                                     color: AppColors.outline,
                                   ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                    vertical: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -391,6 +362,60 @@ class _TunerScreenState extends State<TunerScreen>
           ),
         );
       },
+    );
+  }
+}
+
+/// Cabeçalho enxuto no lugar de um AppBar: marca à esquerda e as duas ações
+/// (calibração e presets) à direita, ocupando só a altura dos botões.
+class _BrandBar extends StatelessWidget {
+  const _BrandBar({
+    required this.controller,
+    required this.onCalibration,
+    required this.onPresets,
+  });
+
+  final TunerController controller;
+  final VoidCallback onCalibration;
+  final VoidCallback onPresets;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Image.asset('assets/branding/logo_mark.png', width: 28, height: 28),
+        const SizedBox(width: 9),
+        // scaleDown mantém o wordmark inteiro em telas estreitas ou com
+        // traduções mais longas.
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              context.l10n.tunerTitle,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          tooltip: context.l10n.calibrationTooltip(controller.a4.round()),
+          icon: const Icon(Icons.tune_rounded),
+          color: AppColors.textSecondary,
+          onPressed: onCalibration,
+        ),
+        IconButton(
+          tooltip: context.l10n.presetsTooltip,
+          icon: const Icon(Icons.library_music_rounded),
+          color: AppColors.textSecondary,
+          onPressed: onPresets,
+        ),
+      ],
     );
   }
 }
@@ -411,7 +436,7 @@ class _CapturePanel extends StatelessWidget {
     final midis = controller.capturedMidis;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(22),
@@ -450,7 +475,7 @@ class _CapturePanel extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           if (midis.isEmpty)
             Text(
               context.l10n.captureHint,
@@ -462,8 +487,8 @@ class _CapturePanel extends StatelessWidget {
             )
           else ...[
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 10,
+              runSpacing: 10,
               children: [
                 for (var i = 0; i < midis.length; i++)
                   TweenAnimationBuilder<double>(
@@ -497,7 +522,7 @@ class _CapturePanel extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -505,6 +530,7 @@ class _CapturePanel extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.mint,
                   foregroundColor: const Color(0xFF04291C),
+                  minimumSize: const Size.fromHeight(50),
                 ),
                 icon: const Icon(Icons.bookmark_add_rounded, size: 20),
                 label: Text(
@@ -536,7 +562,7 @@ class _PresetCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
               Hero(
@@ -582,7 +608,7 @@ class _PresetCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +623,7 @@ class _PresetCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       allTuned
                           ? context.l10n.instrumentTuned

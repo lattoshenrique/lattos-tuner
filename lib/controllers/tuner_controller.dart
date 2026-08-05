@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:lattos_tuner/models/audio_frame.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/pitch_estimate.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
@@ -72,7 +73,16 @@ class TunerController extends ChangeNotifier {
   final Queue<double> _trendFrequencies = Queue<double>();
   final List<int> _capturedMidis = <int>[];
 
+  /// Último quadro de áudio, para as visualizações que reagem ao som.
+  ///
+  /// É um canal próprio (e não `notifyListeners`) porque chega ~20x por
+  /// segundo: só quem desenha o fundo se reconstrói nesse ritmo.
+  final ValueNotifier<AudioFrame> audioFrame = ValueNotifier<AudioFrame>(
+    AudioFrame.silent,
+  );
+
   StreamSubscription<PitchEstimate?>? _subscription;
+  StreamSubscription<AudioFrame>? _audioSubscription;
   List<TuningPreset> _customPresets = [];
   late TuningPreset _activePreset;
   double _a4 = kDefaultA4;
@@ -115,7 +125,12 @@ class TunerController extends ChangeNotifier {
     _activePreset =
         _findPreset(activeId) ?? PresetRepository.builtInPresets.first;
     _subscription = _pitchSource.pitchStream.listen(handleEstimate);
+    _audioSubscription = _pitchSource.audioStream.listen(handleAudioFrame);
   }
+
+  /// Publica um quadro de áudio para as visualizações. Exposto para testes.
+  @visibleForTesting
+  void handleAudioFrame(AudioFrame frame) => audioFrame.value = frame;
 
   TuningPreset? _findPreset(String? id) {
     if (id == null) return null;
@@ -141,6 +156,7 @@ class TunerController extends ChangeNotifier {
     _running = false;
     await _pitchSource.stop();
     _clearReading();
+    audioFrame.value = AudioFrame.silent;
     notifyListeners();
   }
 
@@ -419,6 +435,8 @@ class TunerController extends ChangeNotifier {
   @override
   void dispose() {
     _subscription?.cancel();
+    _audioSubscription?.cancel();
+    audioFrame.dispose();
     _pitchSource.dispose();
     super.dispose();
   }

@@ -1,4 +1,4 @@
-# Forever Tuner 🎸
+# NoAd Tuner 🎸
 
 > **Tune freely. No ads. Ever.**
 

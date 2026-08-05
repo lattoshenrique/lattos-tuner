@@ -121,13 +121,13 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Forever Tuner'**
+  /// **'NoAd Tuner'**
   String get appTitle;
 
   /// No description provided for @tunerTitle.
   ///
   /// In en, this message translates to:
-  /// **'FOREVER TUNER'**
+  /// **'NOAD TUNER'**
   String get tunerTitle;
 
   /// No description provided for @tagline.
@@ -253,7 +253,7 @@ abstract class AppLocalizations {
   /// No description provided for @permissionBody.
   ///
   /// In en, this message translates to:
-  /// **'To tune your instrument, Forever Tuner needs to hear the strings. Grant microphone permission in your device settings.'**
+  /// **'To tune your instrument, NoAd Tuner needs to hear the strings. Grant microphone permission in your device settings.'**
   String get permissionBody;
 
   /// No description provided for @permissionRetry.

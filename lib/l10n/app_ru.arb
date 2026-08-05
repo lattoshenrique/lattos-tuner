@@ -1,7 +1,7 @@
 {
   "@@locale": "ru",
-  "appTitle": "Forever Tuner",
-  "tunerTitle": "FOREVER TUNER",
+  "appTitle": "NoAd Tuner",
+  "tunerTitle": "NOAD TUNER",
   "tagline": "Tune freely. No ads. Ever.",
   "calibrationTooltip": "Калибровка (A4 = {hz} Гц)",
   "presetsTooltip": "Пресеты строя",
@@ -22,7 +22,7 @@
   "hzUnit": "Гц",
   "centsUnit": "центов",
   "permissionTitle": "Нет доступа к микрофону",
-  "permissionBody": "Чтобы настроить инструмент, Forever Tuner должен слышать струны. Разрешите доступ к микрофону в настройках устройства.",
+  "permissionBody": "Чтобы настроить инструмент, NoAd Tuner должен слышать струны. Разрешите доступ к микрофону в настройках устройства.",
   "permissionRetry": "Повторить",
   "calibrationTitle": "Калибровка эталона",
   "calibrationSubtitle": "Частота A4 (по умолчанию: 440 Гц)",
