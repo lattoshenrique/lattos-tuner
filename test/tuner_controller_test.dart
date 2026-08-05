@@ -66,9 +66,7 @@ void main() {
     expect(fresh.activePreset.id, PresetRepository.builtInPresets.first.id);
 
     final restored = await makeController(
-      initialPrefs: {
-        PresetRepository.activePresetKey: 'builtin_soad_drop_c',
-      },
+      initialPrefs: {PresetRepository.activePresetKey: 'builtin_soad_drop_c'},
     );
     expect(restored.activePreset.name, contains('SOAD'));
   });
@@ -77,8 +75,9 @@ void main() {
     test('seleciona a corda mais próxima no modo auto (SOAD Drop C)', () async {
       final controller = await makeController();
       await controller.setActivePreset(
-        PresetRepository.builtInPresets
-            .firstWhere((p) => p.id == 'builtin_soad_drop_c'),
+        PresetRepository.builtInPresets.firstWhere(
+          (p) => p.id == 'builtin_soad_drop_c',
+        ),
       );
 
       // 20 cents abaixo de G2: a corda alvo deve ser G2 (índice 1).
@@ -107,15 +106,9 @@ void main() {
           controller.handleEstimate(null);
         }
         for (var i = 0; i < TunerController.smoothingWindow; i++) {
-          controller.handleEstimate(
-            estimateForNote('E2', centsOffset: cents),
-          );
+          controller.handleEstimate(estimateForNote('E2', centsOffset: cents));
         }
-        expect(
-          controller.reading!.status,
-          expected,
-          reason: '$cents cents',
-        );
+        expect(controller.reading!.status, expected, reason: '$cents cents');
       });
     });
 
@@ -167,6 +160,141 @@ void main() {
       expect(controller.tunedStrings, isNotEmpty);
       await controller.setActivePreset(PresetRepository.builtInPresets[1]);
       expect(controller.tunedStrings, isEmpty);
+    });
+  });
+
+  group('detecção inteligente de cordas', () {
+    Future<TunerController> makeSoadController() async {
+      final controller = await makeController();
+      await controller.setActivePreset(
+        PresetRepository.builtInPresets.firstWhere(
+          (p) => p.id == 'builtin_soad_drop_c',
+        ),
+      );
+      return controller;
+    }
+
+    test('E2 solto no preset SOAD mira C2 e pede para soltar', () async {
+      // Cenário do usuário: guitarra no padrão, preset SOAD (Drop C).
+      // E2 (82,4 Hz) está mais perto de G2 em cents, mas o alvo correto é
+      // C2 — afinar para baixo — e o app deve pedir para SOLTAR a corda.
+      final controller = await makeSoadController();
+      controller.handleEstimate(estimateForNote('E2'));
+      final reading = controller.reading!;
+      expect(reading.targetName, 'C2');
+      expect(reading.stringIndex, 0);
+      expect(reading.status, TuningStatus.tooHigh);
+    });
+
+    test('todas as cordas do padrão miram o alvo de descida no SOAD', () async {
+      final controller = await makeSoadController();
+      const expectations = {
+        'E2': 'C2',
+        'A2': 'G2',
+        'D3': 'C3',
+        'G3': 'F3',
+        'B3': 'A3',
+        'E4': 'D4',
+      };
+      for (final entry in expectations.entries) {
+        // Silêncio para limpar suavização/tendência entre cordas.
+        for (var i = 0; i < TunerController.silenceReadingsToClear + 1; i++) {
+          controller.handleEstimate(null);
+        }
+        controller.handleEstimate(estimateForNote(entry.key));
+        expect(
+          controller.reading!.targetName,
+          entry.value,
+          reason: '${entry.key} deveria mirar ${entry.value}',
+        );
+      }
+    });
+
+    test('corda perto do alvo continua escolhida por proximidade', () async {
+      final controller = await makeSoadController();
+      // G2 30 cents abaixo: perto do alvo, deve pedir para apertar até G2,
+      // não cair para C2.
+      controller.handleEstimate(estimateForNote('G2', centsOffset: -30));
+      expect(controller.reading!.targetName, 'G2');
+      expect(controller.reading!.status, TuningStatus.tooLow);
+    });
+
+    test('tendência de subida muda o alvo para a corda acima', () async {
+      final controller = await makeSoadController();
+      // Entre A3 e D4, apertando a corda (pitch subindo): alvo deve ser D4.
+      for (final frequency in [262.0, 265.0, 268.0, 271.0, 274.0]) {
+        controller.handleEstimate(
+          PitchEstimate(frequency: frequency, probability: 0.95),
+        );
+      }
+      expect(controller.reading!.targetName, 'D4');
+      expect(controller.reading!.status, TuningStatus.tooLow);
+    });
+
+    test('mantém o alvo enquanto o usuário solta a corda até C2', () async {
+      final controller = await makeSoadController();
+      // Descendo de E2 em direção a C2: o alvo deve permanecer C2 o
+      // caminho todo, sempre pedindo para soltar.
+      for (final frequency in [82.4, 81.0, 79.5, 78.0, 76.0, 74.0]) {
+        controller.handleEstimate(
+          PitchEstimate(frequency: frequency, probability: 0.95),
+        );
+        expect(controller.reading!.targetName, 'C2', reason: '$frequency Hz');
+        expect(controller.reading!.status, TuningStatus.tooHigh);
+      }
+    });
+  });
+
+  group('captura de afinação (modo cromático)', () {
+    Future<TunerController> makeChromaticController() async {
+      final controller = await makeController();
+      controller.setMode(TargetMode.chromatic);
+      return controller;
+    }
+
+    void playStable(TunerController controller, String note) {
+      for (var i = 0; i < TunerController.stableReadingsToConfirm; i++) {
+        controller.handleEstimate(estimateForNote(note));
+      }
+    }
+
+    test('nota estável e afinada é capturada uma única vez', () async {
+      final controller = await makeChromaticController();
+      playStable(controller, 'D2');
+      expect(controller.capturedMidis, [nameToMidi('D2')]);
+
+      // Segurar a mesma nota não duplica.
+      playStable(controller, 'D2');
+      expect(controller.capturedMidis, hasLength(1));
+
+      playStable(controller, 'A2');
+      expect(controller.capturedMidis, [nameToMidi('D2'), nameToMidi('A2')]);
+    });
+
+    test('nota instável não é capturada', () async {
+      final controller = await makeChromaticController();
+      controller.handleEstimate(estimateForNote('D2'));
+      controller.handleEstimate(estimateForNote('D2', centsOffset: 40));
+      controller.handleEstimate(estimateForNote('D2'));
+      expect(controller.capturedMidis, isEmpty);
+    });
+
+    test('captura não acontece no modo cordas', () async {
+      final controller = await makeController();
+      playStable(controller, 'E2');
+      expect(controller.capturedMidis, isEmpty);
+      expect(controller.tunedStrings, contains(0));
+    });
+
+    test('remover e limpar notas capturadas', () async {
+      final controller = await makeChromaticController();
+      playStable(controller, 'D2');
+      playStable(controller, 'A2');
+      playStable(controller, 'D3');
+      controller.removeCapturedNoteAt(1);
+      expect(controller.capturedMidis, [nameToMidi('D2'), nameToMidi('D3')]);
+      controller.clearCapturedNotes();
+      expect(controller.capturedMidis, isEmpty);
     });
   });
 

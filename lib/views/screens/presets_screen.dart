@@ -22,7 +22,14 @@ class _PresetsScreenState extends State<PresetsScreen>
     duration: const Duration(milliseconds: 700),
   )..forward();
 
+  /// Filtro por instrumento; null exibe todos.
+  Instrument? _filter;
+
   TunerController get controller => widget.controller;
+
+  List<TuningPreset> _applyFilter(List<TuningPreset> presets) => _filter == null
+      ? presets
+      : presets.where((p) => p.instrument == _filter).toList();
 
   @override
   void dispose() {
@@ -38,7 +45,7 @@ class _PresetsScreenState extends State<PresetsScreen>
 
   Future<void> _openEditor({TuningPreset? existing, TuningPreset? base}) async {
     await Navigator.of(context).push(
-      FadeThroughPageRoute(
+      SharedAxisVerticalPageRoute(
         builder: (_) => PresetEditorScreen(
           controller: controller,
           existing: existing,
@@ -82,8 +89,11 @@ class _PresetsScreenState extends State<PresetsScreen>
     final start = (0.06 * index).clamp(0.0, 0.6);
     final animation = CurvedAnimation(
       parent: _entrance,
-      curve: Interval(start, (start + 0.4).clamp(0.0, 1.0),
-          curve: Curves.easeOutCubic),
+      curve: Interval(
+        start,
+        (start + 0.4).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
     );
     return FadeTransition(
       opacity: animation,
@@ -102,7 +112,8 @@ class _PresetsScreenState extends State<PresetsScreen>
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
-        final custom = controller.customPresets;
+        final custom = _applyFilter(controller.customPresets);
+        final builtIns = _applyFilter(controller.builtInPresets);
         var itemIndex = 0;
         return Scaffold(
           floatingActionButton: FloatingActionButton.extended(
@@ -121,8 +132,20 @@ class _PresetsScreenState extends State<PresetsScreen>
                 title: Text('Afinações'),
                 backgroundColor: AppColors.background,
               ),
+              SliverToBoxAdapter(
+                child: _staggered(
+                  itemIndex++,
+                  _InstrumentFilterBar(
+                    selected: _filter,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _filter = value);
+                    },
+                  ),
+                ),
+              ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                 sliver: SliverToBoxAdapter(
                   child: _staggered(
                     itemIndex++,
@@ -134,7 +157,10 @@ class _PresetsScreenState extends State<PresetsScreen>
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverToBoxAdapter(
-                    child: _staggered(itemIndex++, const _EmptyCustomCard()),
+                    child: _staggered(
+                      itemIndex++,
+                      _EmptyCustomCard(filtered: _filter != null),
+                    ),
                   ),
                 ),
               SliverPadding(
@@ -181,9 +207,9 @@ class _PresetsScreenState extends State<PresetsScreen>
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
                 sliver: SliverList.builder(
-                  itemCount: controller.builtInPresets.length,
+                  itemCount: builtIns.length,
                   itemBuilder: (context, i) {
-                    final preset = controller.builtInPresets[i];
+                    final preset = builtIns[i];
                     return _staggered(
                       itemIndex + custom.length + 1 + i,
                       _PresetTile(
@@ -232,8 +258,58 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+class _InstrumentFilterBar extends StatelessWidget {
+  const _InstrumentFilterBar({required this.selected, required this.onChanged});
+
+  final Instrument? selected;
+  final ValueChanged<Instrument?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          for (final entry in <(Instrument?, String)>[
+            (null, 'Todos'),
+            for (final instrument in Instrument.values)
+              (instrument, instrument.label),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(entry.$2),
+                selected: selected == entry.$1,
+                showCheckmark: false,
+                selectedColor: AppColors.mint.withValues(alpha: 0.18),
+                backgroundColor: AppColors.surfaceBright,
+                side: BorderSide(
+                  color: selected == entry.$1
+                      ? AppColors.mint
+                      : AppColors.outline,
+                ),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: selected == entry.$1
+                      ? AppColors.mint
+                      : AppColors.textSecondary,
+                ),
+                onSelected: (_) => onChanged(entry.$1),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyCustomCard extends StatelessWidget {
-  const _EmptyCustomCard();
+  const _EmptyCustomCard({required this.filtered});
+
+  /// Verdadeiro quando a lista está vazia por causa do filtro ativo.
+  final bool filtered;
 
   @override
   Widget build(BuildContext context) {
@@ -243,15 +319,20 @@ class _EmptyCustomCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.outline),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.auto_awesome_rounded, color: AppColors.violet),
-          SizedBox(width: 14),
+          const Icon(Icons.auto_awesome_rounded, color: AppColors.violet),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
-              'Crie seu primeiro preset com a afinação que você usa — '
-              'ou duplique uma afinação padrão e personalize.',
-              style: TextStyle(
+              filtered
+                  ? 'Nenhum preset seu para esse instrumento ainda — crie um '
+                        'no botão abaixo ou capture uma afinação no modo '
+                        'cromático do afinador.'
+                  : 'Crie seu primeiro preset com a afinação que você usa — '
+                        'duplique uma afinação padrão ou capture a afinação '
+                        'do seu instrumento no modo cromático do afinador.',
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 height: 1.45,
                 fontSize: 13.5,
@@ -265,8 +346,12 @@ class _EmptyCustomCard extends StatelessWidget {
 }
 
 class _MenuAction {
-  const _MenuAction(this.label, this.icon, this.onSelected,
-      {this.destructive = false});
+  const _MenuAction(
+    this.label,
+    this.icon,
+    this.onSelected, {
+    this.destructive = false,
+  });
 
   final String label;
   final IconData icon;
@@ -299,7 +384,9 @@ class _PresetTile extends StatelessWidget {
             : AppColors.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isActive ? AppColors.mint.withValues(alpha: 0.6) : AppColors.outline,
+          color: isActive
+              ? AppColors.mint.withValues(alpha: 0.6)
+              : AppColors.outline,
           width: isActive ? 1.4 : 1.0,
         ),
         boxShadow: [
@@ -320,31 +407,37 @@ class _PresetTile extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
             child: Row(
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(13),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isActive
-                          ? [AppColors.mint, const Color(0xFF19B380)]
-                          : [
-                              AppColors.surfaceBright,
-                              const Color(0xFF1D2A3D),
-                            ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${preset.notes.length}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                        color: isActive
-                            ? const Color(0xFF04291C)
-                            : AppColors.textSecondary,
+                Hero(
+                  tag: 'preset-avatar-${preset.id}',
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(13),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isActive
+                              ? [AppColors.mint, const Color(0xFF19B380)]
+                              : [
+                                  AppColors.surfaceBright,
+                                  const Color(0xFF1D2A3D),
+                                ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${preset.notes.length}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 17,
+                            color: isActive
+                                ? const Color(0xFF04291C)
+                                : AppColors.textSecondary,
+                          ),
+                        ),
                       ),
                     ),
                   ),

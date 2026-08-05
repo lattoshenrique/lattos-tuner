@@ -13,8 +13,8 @@ class YinPitchDetector {
     required this.sampleRate,
     this.bufferSize = 4096,
     this.threshold = 0.12,
-  })  : _halfSize = bufferSize ~/ 2,
-        _cmnd = Float64List(bufferSize ~/ 2);
+  }) : _halfSize = bufferSize ~/ 2,
+       _cmnd = Float64List(bufferSize ~/ 2);
 
   final double sampleRate;
   final int bufferSize;

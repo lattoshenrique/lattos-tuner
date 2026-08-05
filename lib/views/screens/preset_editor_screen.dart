@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
 import 'package:lattos_tuner/views/theme.dart';
 import 'package:lattos_tuner/views/widgets/string_chips.dart'
@@ -10,18 +11,22 @@ import 'package:lattos_tuner/views/widgets/string_chips.dart'
 /// Criação e edição de presets customizados.
 ///
 /// [existing] edita um preset em vez de criar; [base] pré-preenche o
-/// formulário a partir de outro preset (duplicar).
+/// formulário a partir de outro preset (duplicar ou captura do afinador).
+/// Com [activateOnSave], o preset salvo vira o ativo e as notas capturadas
+/// no afinador são limpas — usado pelo fluxo "salvar como preset".
 class PresetEditorScreen extends StatefulWidget {
   const PresetEditorScreen({
     super.key,
     required this.controller,
     this.existing,
     this.base,
+    this.activateOnSave = false,
   });
 
   final TunerController controller;
   final TuningPreset? existing;
   final TuningPreset? base;
+  final bool activateOnSave;
 
   @override
   State<PresetEditorScreen> createState() => _PresetEditorScreenState();
@@ -38,9 +43,11 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
   void initState() {
     super.initState();
     final source = widget.existing ?? widget.base;
+    final baseName = widget.base?.name ?? '';
     _nameController = TextEditingController(
-      text: widget.existing?.name ??
-          (widget.base == null ? '' : '${widget.base!.name} (cópia)'),
+      text:
+          widget.existing?.name ??
+          (baseName.isEmpty ? '' : '$baseName (cópia)'),
     );
     _instrument = source?.instrument ?? Instrument.guitar;
     _midiNotes = (source?.notes ?? const ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'])
@@ -57,9 +64,9 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dê um nome ao preset.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Dê um nome ao preset.')));
       return;
     }
     if (_midiNotes.isEmpty) {
@@ -69,13 +76,19 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
       return;
     }
     final preset = TuningPreset(
-      id: widget.existing?.id ??
+      id:
+          widget.existing?.id ??
           'custom_${DateTime.now().millisecondsSinceEpoch}',
       name: name,
       instrument: _instrument,
       notes: _midiNotes.map(midiToName).toList(),
     );
     await widget.controller.saveCustomPreset(preset);
+    if (widget.activateOnSave) {
+      await widget.controller.setActivePreset(preset);
+      widget.controller.setMode(TargetMode.auto);
+      widget.controller.clearCapturedNotes();
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -194,8 +207,9 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
                     midi: _midiNotes[i],
                     a4: widget.controller.a4,
                     onShift: (semitones) => _shiftNote(i, semitones),
-                    onRemove:
-                        _midiNotes.length > 1 ? () => _removeString(i) : null,
+                    onRemove: _midiNotes.length > 1
+                        ? () => _removeString(i)
+                        : null,
                   ),
                 const SizedBox(height: 6),
                 OutlinedButton.icon(
@@ -244,93 +258,105 @@ class _StringRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = midiToName(midi);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.outline),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - value)),
+          child: child,
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceBright,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textSecondary,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.outline),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBright,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(
+                  '${index + 1}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed: () => onShift(-1),
-            tooltip: 'Meio tom abaixo',
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(scale: animation, child: child),
-              ),
-              child: Column(
-                key: ValueKey(midi),
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    noteFrequencyLabel(name, a4: a4),
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+            const SizedBox(width: 12),
+            IconButton(
+              onPressed: () => onShift(-1),
+              tooltip: 'Meio tom abaixo',
+              icon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: AppColors.textSecondary,
               ),
             ),
-          ),
-          IconButton(
-            onPressed: () => onShift(1),
-            tooltip: 'Meio tom acima',
-            icon: const Icon(
-              Icons.keyboard_arrow_up_rounded,
-              color: AppColors.textSecondary,
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
+                ),
+                child: Column(
+                  key: ValueKey(midi),
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      noteFrequencyLabel(name, a4: a4),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: onRemove,
-            tooltip: 'Remover corda',
-            icon: Icon(
-              Icons.close_rounded,
-              size: 20,
-              color: onRemove == null
-                  ? AppColors.outline
-                  : AppColors.coral.withValues(alpha: 0.8),
+            IconButton(
+              onPressed: () => onShift(1),
+              tooltip: 'Meio tom acima',
+              icon: const Icon(
+                Icons.keyboard_arrow_up_rounded,
+                color: AppColors.textSecondary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: onRemove,
+              tooltip: 'Remover corda',
+              icon: Icon(
+                Icons.close_rounded,
+                size: 20,
+                color: onRemove == null
+                    ? AppColors.outline
+                    : AppColors.coral.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

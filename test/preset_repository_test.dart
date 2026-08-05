@@ -14,8 +14,9 @@ void main() {
 
   group('presets embutidos', () {
     test('incluem a afinação SOAD (Drop C)', () {
-      final soad = PresetRepository.builtInPresets
-          .firstWhere((p) => p.id == 'builtin_soad_drop_c');
+      final soad = PresetRepository.builtInPresets.firstWhere(
+        (p) => p.id == 'builtin_soad_drop_c',
+      );
       expect(soad.name, contains('SOAD'));
       expect(soad.notes, ['C2', 'G2', 'C3', 'F3', 'A3', 'D4']);
     });
@@ -27,11 +28,7 @@ void main() {
         // Drop tunings mantêm a ordem crescente exceto pela 6ª corda solta;
         // aqui garantimos apenas que não há notas repetidas fora de ordem
         // absurda: a última deve ser a mais aguda.
-        expect(
-          midis.last,
-          greaterThan(midis.first!),
-          reason: preset.name,
-        );
+        expect(midis.last, greaterThan(midis.first!), reason: preset.name);
       }
     });
 
@@ -104,8 +101,9 @@ void main() {
       SharedPreferences.setMockInitialValues({
         PresetRepository.customPresetsKey: 'not json{{',
       });
-      final repository =
-          PresetRepository(await SharedPreferences.getInstance());
+      final repository = PresetRepository(
+        await SharedPreferences.getInstance(),
+      );
       expect(repository.loadCustomPresets(), isEmpty);
     });
   });

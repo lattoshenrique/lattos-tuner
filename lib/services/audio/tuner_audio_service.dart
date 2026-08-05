@@ -24,7 +24,7 @@ abstract class PitchSource {
 /// 22,05 kHz e emite estimativas de pitch via YIN.
 class TunerAudioService implements PitchSource {
   TunerAudioService({AudioRecorder Function()? recorderFactory})
-      : _recorderFactory = recorderFactory ?? AudioRecorder.new;
+    : _recorderFactory = recorderFactory ?? AudioRecorder.new;
 
   static const int captureSampleRate = 44100;
   static const int decimationFactor = 2;

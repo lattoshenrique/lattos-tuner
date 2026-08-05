@@ -3,13 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
+import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
 import 'package:lattos_tuner/views/screens/presets_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/aurora_background.dart';
+import 'package:lattos_tuner/views/widgets/confetti_burst.dart';
 import 'package:lattos_tuner/views/widgets/note_display.dart';
 import 'package:lattos_tuner/views/widgets/string_chips.dart';
 import 'package:lattos_tuner/views/widgets/tuner_gauge.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Tela principal: medidor, nota alvo, cordas do preset e status.
+///
+/// Mantém a tela do aparelho acesa enquanto estiver em primeiro plano.
 class TunerScreen extends StatefulWidget {
   const TunerScreen({super.key, required this.controller});
 
@@ -20,9 +27,16 @@ class TunerScreen extends StatefulWidget {
 }
 
 class _TunerScreenState extends State<TunerScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..forward();
+
   int _lastTunedCount = 0;
+  int _lastCapturedCount = 0;
   bool _celebrated = false;
+  int _celebrationCount = 0;
 
   TunerController get controller => widget.controller;
 
@@ -31,22 +45,27 @@ class _TunerScreenState extends State<TunerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     controller.addListener(_onControllerChange);
+    WakelockPlus.enable();
     WidgetsBinding.instance.addPostFrameCallback((_) => controller.start());
   }
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     WidgetsBinding.instance.removeObserver(this);
     controller.removeListener(_onControllerChange);
+    _entrance.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      WakelockPlus.enable();
       controller.start();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
+      WakelockPlus.disable();
       controller.stop();
     }
   }
@@ -57,9 +76,17 @@ class _TunerScreenState extends State<TunerScreen>
       HapticFeedback.mediumImpact();
     }
     _lastTunedCount = tunedCount;
+
+    final capturedCount = controller.capturedMidis.length;
+    if (capturedCount > _lastCapturedCount) {
+      HapticFeedback.mediumImpact();
+    }
+    _lastCapturedCount = capturedCount;
+
     if (controller.allStringsTuned && !_celebrated) {
       _celebrated = true;
       HapticFeedback.heavyImpact();
+      setState(() => _celebrationCount++);
     } else if (!controller.allStringsTuned) {
       _celebrated = false;
     }
@@ -70,6 +97,26 @@ class _TunerScreenState extends State<TunerScreen>
     await Navigator.of(context).push(
       FadeThroughPageRoute(
         builder: (_) => PresetsScreen(controller: controller),
+      ),
+    );
+    controller.start();
+  }
+
+  Future<void> _saveCapturedPreset() async {
+    final notes = controller.capturedMidis.map(midiToName).toList();
+    controller.stop();
+    await Navigator.of(context).push(
+      SharedAxisVerticalPageRoute(
+        builder: (_) => PresetEditorScreen(
+          controller: controller,
+          base: TuningPreset(
+            id: 'capture',
+            name: '',
+            instrument: Instrument.guitar,
+            notes: notes,
+          ),
+          activateOnSave: true,
+        ),
       ),
     );
     controller.start();
@@ -86,6 +133,29 @@ class _TunerScreenState extends State<TunerScreen>
     );
   }
 
+  /// Entrada escalonada dos blocos da tela na abertura do app.
+  Widget _entranceSlot(int slot, Widget child) {
+    final start = (slot * 0.09).clamp(0.0, 0.6);
+    final animation = CurvedAnimation(
+      parent: _entrance,
+      curve: Interval(
+        start,
+        (start + 0.4).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween(
+          begin: const Offset(0, 0.08),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -94,6 +164,7 @@ class _TunerScreenState extends State<TunerScreen>
         final reading = controller.reading;
         final status = reading?.status;
         final accent = statusColor(status);
+        final chromatic = controller.mode == TargetMode.chromatic;
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
@@ -112,109 +183,283 @@ class _TunerScreenState extends State<TunerScreen>
               const SizedBox(width: 4),
             ],
           ),
-          body: AnimatedContainer(
-            duration: const Duration(milliseconds: 700),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0, -0.6),
-                radius: 1.3,
-                colors: [
-                  accent.withValues(alpha: 0.16),
-                  AppColors.background,
-                ],
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOut,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.6),
+                    radius: 1.3,
+                    colors: [
+                      accent.withValues(alpha: 0.14),
+                      AppColors.background,
+                    ],
+                  ),
+                ),
               ),
-            ),
-            child: SafeArea(
-              child: controller.permissionDenied
-                  ? _PermissionDeniedView(onRetry: controller.start)
-                  : Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                      child: Column(
-                        children: [
-                          _PresetCard(
-                            controller: controller,
-                            onTap: _openPresets,
-                          ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                TunerGauge(
-                                  cents: reading?.cents,
-                                  color: accent,
-                                  active: controller.isRunning,
-                                ),
-                                const SizedBox(height: 8),
-                                NoteDisplay(
-                                  noteName: reading == null
-                                      ? null
-                                      : kNoteNames[reading.targetMidi % 12],
-                                  octave: reading == null
-                                      ? null
-                                      : (reading.targetMidi ~/ 12) - 1,
-                                  color: accent,
-                                  inTune: status == TuningStatus.inTune,
-                                ),
-                                const SizedBox(height: 4),
-                                _ReadoutRow(reading: reading),
-                                const SizedBox(height: 12),
-                                _StatusPill(
-                                  controller: controller,
-                                  accent: accent,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (controller.mode != TargetMode.chromatic)
-                            StringChips(
-                              notes: controller.activePreset.notes,
-                              targetIndex: reading?.stringIndex,
-                              lockedIndex: controller.lockedStringIndex,
-                              tunedIndices: controller.tunedStrings,
-                              accentColor: accent,
-                              onTap: controller.toggleStringLock,
-                            ),
-                          const SizedBox(height: 16),
-                          SegmentedButton<bool>(
-                            segments: const [
-                              ButtonSegment(
-                                value: false,
-                                label: Text('Cordas'),
-                                icon: Icon(Icons.linear_scale_rounded),
+              AuroraBackground(accent: accent),
+              SafeArea(
+                child: controller.permissionDenied
+                    ? _PermissionDeniedView(onRetry: controller.start)
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                        child: Column(
+                          children: [
+                            _entranceSlot(
+                              0,
+                              _PresetCard(
+                                controller: controller,
+                                onTap: _openPresets,
                               ),
-                              ButtonSegment(
-                                value: true,
-                                label: Text('Cromático'),
-                                icon: Icon(Icons.piano_rounded),
-                              ),
-                            ],
-                            selected: {
-                              controller.mode == TargetMode.chromatic,
-                            },
-                            onSelectionChanged: (selection) {
-                              HapticFeedback.selectionClick();
-                              controller.setMode(
-                                selection.first
-                                    ? TargetMode.chromatic
-                                    : TargetMode.auto,
-                              );
-                            },
-                            style: SegmentedButton.styleFrom(
-                              selectedBackgroundColor:
-                                  accent.withValues(alpha: 0.18),
-                              selectedForegroundColor: accent,
-                              foregroundColor: AppColors.textSecondary,
-                              side: const BorderSide(color: AppColors.outline),
                             ),
-                          ),
-                        ],
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _entranceSlot(
+                                    1,
+                                    TunerGauge(
+                                      cents: reading?.cents,
+                                      color: accent,
+                                      active: controller.isRunning,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _entranceSlot(
+                                    2,
+                                    NoteDisplay(
+                                      noteName: reading == null
+                                          ? null
+                                          : kNoteNames[reading.targetMidi % 12],
+                                      octave: reading == null
+                                          ? null
+                                          : (reading.targetMidi ~/ 12) - 1,
+                                      color: accent,
+                                      inTune: status == TuningStatus.inTune,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  _entranceSlot(
+                                    3,
+                                    _ReadoutRow(reading: reading),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _entranceSlot(
+                                    4,
+                                    _StatusPill(
+                                      controller: controller,
+                                      accent: accent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _entranceSlot(
+                              5,
+                              ClipRect(
+                                child: AnimatedSize(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.easeOutCubic,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 250),
+                                    child: chromatic
+                                        ? _CapturePanel(
+                                            key: const ValueKey('capture'),
+                                            controller: controller,
+                                            onSave: _saveCapturedPreset,
+                                          )
+                                        : StringChips(
+                                            key: const ValueKey('strings'),
+                                            notes:
+                                                controller.activePreset.notes,
+                                            targetIndex: reading?.stringIndex,
+                                            lockedIndex:
+                                                controller.lockedStringIndex,
+                                            tunedIndices:
+                                                controller.tunedStrings,
+                                            accentColor: accent,
+                                            onTap: controller.toggleStringLock,
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _entranceSlot(
+                              6,
+                              SegmentedButton<bool>(
+                                segments: const [
+                                  ButtonSegment(
+                                    value: false,
+                                    label: Text('Cordas'),
+                                    icon: Icon(Icons.linear_scale_rounded),
+                                  ),
+                                  ButtonSegment(
+                                    value: true,
+                                    label: Text('Cromático'),
+                                    icon: Icon(Icons.piano_rounded),
+                                  ),
+                                ],
+                                selected: {chromatic},
+                                onSelectionChanged: (selection) {
+                                  HapticFeedback.selectionClick();
+                                  controller.setMode(
+                                    selection.first
+                                        ? TargetMode.chromatic
+                                        : TargetMode.auto,
+                                  );
+                                },
+                                style: SegmentedButton.styleFrom(
+                                  selectedBackgroundColor: accent.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                  selectedForegroundColor: accent,
+                                  foregroundColor: AppColors.textSecondary,
+                                  side: const BorderSide(
+                                    color: AppColors.outline,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-            ),
+              ),
+              ConfettiBurst(play: _celebrationCount),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+/// Painel do modo cromático: notas capturadas viram um preset novo.
+class _CapturePanel extends StatelessWidget {
+  const _CapturePanel({
+    super.key,
+    required this.controller,
+    required this.onSave,
+  });
+
+  final TunerController controller;
+  final Future<void> Function() onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final midis = controller.capturedMidis;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.fiber_manual_record_rounded,
+                size: 10,
+                color: AppColors.coral,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'CAPTURA DE AFINAÇÃO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              if (midis.isNotEmpty)
+                TextButton(
+                  onPressed: controller.clearCapturedNotes,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Limpar'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (midis.isEmpty)
+            const Text(
+              'Afine cada corda livremente — quando uma nota estabiliza, '
+              'ela entra aqui. Toque da corda mais grave para a mais aguda '
+              'e depois salve como preset.',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (var i = 0; i < midis.length; i++)
+                  TweenAnimationBuilder<double>(
+                    key: ValueKey('captured_${i}_${midis[i]}'),
+                    tween: Tween(begin: 0, end: 1),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    builder: (context, value, child) =>
+                        Transform.scale(scale: value, child: child),
+                    child: InputChip(
+                      label: Text(
+                        midiToName(midis[i]),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mint,
+                        ),
+                      ),
+                      onDeleted: () {
+                        HapticFeedback.selectionClick();
+                        controller.removeCapturedNoteAt(i);
+                      },
+                      deleteIconColor: AppColors.textSecondary,
+                      backgroundColor: AppColors.surfaceBright,
+                      side: BorderSide(
+                        color: AppColors.mint.withValues(alpha: 0.4),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onSave,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.mint,
+                  foregroundColor: const Color(0xFF04291C),
+                ),
+                icon: const Icon(Icons.bookmark_add_rounded, size: 20),
+                label: const Text(
+                  'Salvar como preset',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -238,40 +483,46 @@ class _PresetCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: allTuned
-                        ? [AppColors.mint, const Color(0xFF19B380)]
-                        : [AppColors.violet, const Color(0xFF5C4DD6)],
-                  ),
-                ),
-                child: Center(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, animation) =>
-                        ScaleTransition(scale: animation, child: child),
-                    child: allTuned
-                        ? const Icon(
-                            Icons.check_rounded,
-                            key: ValueKey('tuned'),
-                            color: Colors.white,
-                          )
-                        : Text(
-                            '${preset.notes.length}',
-                            key: const ValueKey('count'),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                            ),
-                          ),
+              Hero(
+                tag: 'preset-avatar-${preset.id}',
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: allTuned
+                            ? [AppColors.mint, const Color(0xFF19B380)]
+                            : [AppColors.violet, const Color(0xFF5C4DD6)],
+                      ),
+                    ),
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: allTuned
+                            ? const Icon(
+                                Icons.check_rounded,
+                                key: ValueKey('tuned'),
+                                color: Colors.white,
+                              )
+                            : Text(
+                                '${preset.notes.length}',
+                                key: const ValueKey('count'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -295,7 +546,7 @@ class _PresetCard extends StatelessWidget {
                       allTuned
                           ? 'Instrumento afinado! 🤘'
                           : '${preset.instrument.label} · '
-                              '${preset.notes.join(' ')}',
+                                '${preset.notes.join(' ')}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -394,17 +645,18 @@ class _StatusPill extends StatelessWidget {
     final status = controller.reading?.status;
     return switch (status) {
       null => Icons.hearing_rounded,
-      TuningStatus.tooLow || TuningStatus.slightlyLow =>
-        Icons.keyboard_double_arrow_up_rounded,
+      TuningStatus.tooLow ||
+      TuningStatus.slightlyLow => Icons.keyboard_double_arrow_up_rounded,
       TuningStatus.inTune => Icons.check_circle_rounded,
-      TuningStatus.tooHigh || TuningStatus.slightlyHigh =>
-        Icons.keyboard_double_arrow_down_rounded,
+      TuningStatus.tooHigh ||
+      TuningStatus.slightlyHigh => Icons.keyboard_double_arrow_down_rounded,
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final active = controller.reading != null;
+    final inTune = controller.reading?.status == TuningStatus.inTune;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
@@ -417,6 +669,14 @@ class _StatusPill extends StatelessWidget {
         border: Border.all(
           color: active ? accent.withValues(alpha: 0.5) : AppColors.outline,
         ),
+        boxShadow: [
+          if (inTune)
+            BoxShadow(
+              color: accent.withValues(alpha: 0.4),
+              blurRadius: 26,
+              spreadRadius: -4,
+            ),
+        ],
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 240),

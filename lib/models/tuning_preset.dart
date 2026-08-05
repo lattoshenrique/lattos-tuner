@@ -11,9 +11,9 @@ enum Instrument {
   final String label;
 
   static Instrument fromName(String? name) => Instrument.values.firstWhere(
-        (value) => value.name == name,
-        orElse: () => Instrument.other,
-      );
+    (value) => value.name == name,
+    orElse: () => Instrument.other,
+  );
 }
 
 /// Um preset de afinação: uma lista ordenada de notas (da mais grave para a
@@ -28,11 +28,11 @@ class TuningPreset {
   });
 
   factory TuningPreset.fromJson(Map<String, dynamic> json) => TuningPreset(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        instrument: Instrument.fromName(json['instrument'] as String?),
-        notes: (json['notes'] as List<dynamic>).cast<String>(),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    instrument: Instrument.fromName(json['instrument'] as String?),
+    notes: (json['notes'] as List<dynamic>).cast<String>(),
+  );
 
   final String id;
   final String name;
@@ -44,11 +44,11 @@ class TuningPreset {
   final bool isBuiltIn;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'instrument': instrument.name,
-        'notes': notes,
-      };
+    'id': id,
+    'name': name,
+    'instrument': instrument.name,
+    'notes': notes,
+  };
 
   TuningPreset copyWith({
     String? id,
@@ -56,12 +56,11 @@ class TuningPreset {
     Instrument? instrument,
     List<String>? notes,
     bool? isBuiltIn,
-  }) =>
-      TuningPreset(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        instrument: instrument ?? this.instrument,
-        notes: notes ?? List.of(this.notes),
-        isBuiltIn: isBuiltIn ?? this.isBuiltIn,
-      );
+  }) => TuningPreset(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    instrument: instrument ?? this.instrument,
+    notes: notes ?? List.of(this.notes),
+    isBuiltIn: isBuiltIn ?? this.isBuiltIn,
+  );
 }

@@ -7,12 +7,16 @@ import 'package:lattos_tuner/models/pitch_estimate.dart';
 import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
 
 /// Gera PCM16 little-endian mono a 44,1 kHz.
-Uint8List pcm16Sine(double frequency, int sampleCount, {double amplitude = 0.4}) {
+Uint8List pcm16Sine(
+  double frequency,
+  int sampleCount, {
+  double amplitude = 0.4,
+}) {
   final data = ByteData(sampleCount * 2);
   for (var i = 0; i < sampleCount; i++) {
     final t = i / TunerAudioService.captureSampleRate;
-    final sample =
-        (amplitude * 32767 * math.sin(2 * math.pi * frequency * t)).round();
+    final sample = (amplitude * 32767 * math.sin(2 * math.pi * frequency * t))
+        .round();
     data.setInt16(i * 2, sample, Endian.little);
   }
   return data.buffer.asUint8List();
@@ -48,9 +52,7 @@ void main() {
       final estimates = <PitchEstimate?>[];
       final subscription = service.pitchStream.listen(estimates.add);
 
-      service.processChunk(
-        Uint8List(TunerAudioService.captureSampleRate),
-      );
+      service.processChunk(Uint8List(TunerAudioService.captureSampleRate));
       await Future<void>.delayed(Duration.zero);
       await subscription.cancel();
 

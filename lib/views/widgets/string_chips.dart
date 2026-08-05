@@ -73,13 +73,13 @@ class _StringChip extends StatelessWidget {
     final borderColor = isLocked
         ? accentColor
         : isTarget
-            ? accentColor.withValues(alpha: 0.7)
-            : AppColors.outline;
+        ? accentColor.withValues(alpha: 0.7)
+        : AppColors.outline;
     final noteColor = highlight
         ? accentColor
         : isTuned
-            ? AppColors.mint.withValues(alpha: 0.9)
-            : AppColors.textSecondary;
+        ? AppColors.mint.withValues(alpha: 0.9)
+        : AppColors.textSecondary;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,

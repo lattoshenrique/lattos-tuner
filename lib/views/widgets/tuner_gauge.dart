@@ -110,7 +110,8 @@ class _GaugePainter extends CustomPainter {
       final direction = Offset(math.sin(angle), -math.cos(angle));
       final outer = pivot + direction * (radius - 12);
       final inner = pivot + direction * (radius - (isMajor ? 30.0 : 22.0));
-      final lit = liveness > 0 &&
+      final lit =
+          liveness > 0 &&
           ((cents >= 0 && value >= 0 && value <= cents) ||
               (cents < 0 && value <= 0 && value >= cents));
       final tick = Paint()
@@ -132,11 +133,16 @@ class _GaugePainter extends CustomPainter {
 
     // Ponteiro com brilho.
     final needleAngle = _angleForCents(cents);
-    final needleDirection =
-        Offset(math.sin(needleAngle), -math.cos(needleAngle));
+    final needleDirection = Offset(
+      math.sin(needleAngle),
+      -math.cos(needleAngle),
+    );
     final needleEnd = pivot + needleDirection * (radius - 36);
-    final needleColor =
-        Color.lerp(Colors.white.withValues(alpha: 0.25), color, liveness)!;
+    final needleColor = Color.lerp(
+      Colors.white.withValues(alpha: 0.25),
+      color,
+      liveness,
+    )!;
     final glow = Paint()
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
@@ -150,16 +156,8 @@ class _GaugePainter extends CustomPainter {
     canvas.drawLine(pivot, needleEnd, needle);
 
     // Pivô.
-    canvas.drawCircle(
-      pivot,
-      7,
-      Paint()..color = needleColor,
-    );
-    canvas.drawCircle(
-      pivot,
-      3,
-      Paint()..color = AppColors.background,
-    );
+    canvas.drawCircle(pivot, 7, Paint()..color = needleColor);
+    canvas.drawCircle(pivot, 3, Paint()..color = AppColors.background);
   }
 
   void _drawLabel(
@@ -180,7 +178,8 @@ class _GaugePainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    final position = pivot +
+    final position =
+        pivot +
         Offset(math.sin(angle), -math.cos(angle)) * distance -
         Offset(painter.width / 2, painter.height / 2);
     painter.paint(canvas, position);

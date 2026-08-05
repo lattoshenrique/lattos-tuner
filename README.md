@@ -9,22 +9,34 @@ cavaquinho e o que mais você inventar.
 - **Detecção de pitch em tempo real** pelo microfone, usando o algoritmo
   **YIN** implementado em Dart puro (sem dependência de DSP externa), com
   suavização por mediana e gate de silêncio.
+- **Detecção inteligente de corda**: perto do alvo vale a proximidade; na
+  zona ambígua entre duas cordas, a direção do movimento (apertando ou
+  soltando a tarraxa) e o alvo anterior decidem — ao descer do padrão para
+  o SOAD (Drop C), o E2 solto mira **C2** e pede para *soltar*, não G2.
 - **Presets de afinação**:
   - Embutidos: Padrão (E A D G B E), **SOAD – Drop C (C G C F A D)**, Drop D,
     Meio tom abaixo (Eb), Drop C#, DADGAD, Open G, Baixo 4 e 5 cordas,
     Ukulele e Cavaquinho.
   - **Customizados**: crie, edite, duplique e exclua presets seus — salvos no
-    aparelho e mantidos entre sessões.
+    aparelho e mantidos entre sessões — com escolha de instrumento.
+  - **Captura pelo afinador**: no modo cromático, cada nota estável entra na
+    lista de captura; salve como preset direto da tela do afinador, e ele já
+    vira o preset ativo.
+  - **Filtro por instrumento** na lista de afinações (guitarra/violão,
+    baixo, ukulele, cavaquinho…).
 - **Modos de alvo**:
   - *Auto*: detecta a corda do preset mais próxima do som tocado.
   - *Manual*: toque em uma corda para travá-la como alvo.
   - *Cromático*: afina para a nota mais próxima, sem preset.
 - **Acompanhamento por corda**: cada corda ganha um ✓ quando afinada; o app
-  celebra quando o instrumento inteiro está pronto.
+  celebra com confetes quando o instrumento inteiro está pronto.
+- **Tela sempre acesa** enquanto o afinador está em primeiro plano
+  (wakelock).
 - **Calibração do A4** (415–466 Hz, padrão 440 Hz).
-- **UI moderna**: tema escuro com gradiente que reage ao estado da afinação,
-  medidor com ponteiro e escala que "acende", animações de transição
-  (fade-through, stagger), haptics e Material 3.
+- **UI moderna**: tema escuro com fundo "aurora" animado que reage ao estado
+  da afinação, medidor com ponteiro e escala que "acende", transições
+  Material Motion (fade-through e shared-axis), efeitos Hero, entrada
+  escalonada, haptics e Material 3.
 
 ## Como rodar
 

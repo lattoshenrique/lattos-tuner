@@ -17,8 +17,7 @@ Float64List sineWave(
     final t = i / sampleRate;
     var sample = amplitude * math.sin(2 * math.pi * frequency * t);
     for (var h = 0; h < harmonics.length; h++) {
-      sample +=
-          harmonics[h] * math.sin(2 * math.pi * frequency * (h + 2) * t);
+      sample += harmonics[h] * math.sin(2 * math.pi * frequency * (h + 2) * t);
     }
     buffer[i] = sample;
   }
@@ -28,8 +27,10 @@ Float64List sineWave(
 void main() {
   const sampleRate = 22050.0;
   const bufferSize = 4096;
-  final detector =
-      YinPitchDetector(sampleRate: sampleRate, bufferSize: bufferSize);
+  final detector = YinPitchDetector(
+    sampleRate: sampleRate,
+    bufferSize: bufferSize,
+  );
 
   group('YinPitchDetector', () {
     test('detecta senoides puras nas frequências das cordas', () {
@@ -46,14 +47,16 @@ void main() {
         440.0,
       ];
       for (final frequency in frequencies) {
-        final estimate =
-            detector.estimate(sineWave(frequency, sampleRate, bufferSize));
+        final estimate = detector.estimate(
+          sineWave(frequency, sampleRate, bufferSize),
+        );
         expect(estimate, isNotNull, reason: '$frequency Hz não detectado');
         final cents = centsBetween(estimate!.frequency, frequency);
         expect(
           cents.abs(),
           lessThan(2.0),
-          reason: '$frequency Hz detectado como ${estimate.frequency} Hz '
+          reason:
+              '$frequency Hz detectado como ${estimate.frequency} Hz '
               '(${cents.toStringAsFixed(2)} cents)',
         );
       }
@@ -69,10 +72,7 @@ void main() {
       );
       final estimate = detector.estimate(buffer);
       expect(estimate, isNotNull);
-      expect(
-        centsBetween(estimate!.frequency, 110.0).abs(),
-        lessThan(2.0),
-      );
+      expect(centsBetween(estimate!.frequency, 110.0).abs(), lessThan(2.0));
       expect(estimate.probability, greaterThan(0.85));
     });
 
