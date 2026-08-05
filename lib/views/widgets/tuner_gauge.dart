@@ -2,8 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-
-import '../theme.dart';
+import 'package:lattos_tuner/views/theme.dart';
 
 /// Medidor em arco com ponteiro animado e escala de cents (-50 a +50).
 ///

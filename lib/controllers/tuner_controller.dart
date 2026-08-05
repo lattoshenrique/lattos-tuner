@@ -2,51 +2,12 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-
-import '../audio/tuner_audio_service.dart';
-import '../audio/yin_pitch_detector.dart';
-import '../models/note.dart';
-import '../models/tuning_preset.dart';
-import 'preset_repository.dart';
-
-/// Situação da nota tocada em relação ao alvo.
-enum TuningStatus { tooLow, slightlyLow, inTune, slightlyHigh, tooHigh }
-
-/// Modo de escolha do alvo de afinação.
-enum TargetMode {
-  /// Corda do preset mais próxima da frequência detectada.
-  auto,
-
-  /// Corda travada manualmente pelo usuário.
-  manual,
-
-  /// Nota cromática mais próxima, ignorando o preset.
-  chromatic,
-}
-
-/// Leitura pronta para exibição: frequência suavizada, alvo e desvio.
-class TunerReading {
-  const TunerReading({
-    required this.frequency,
-    required this.targetMidi,
-    required this.cents,
-    required this.status,
-    this.stringIndex,
-  });
-
-  final double frequency;
-  final int targetMidi;
-
-  /// Desvio em cents em relação ao alvo (negativo = abaixo do alvo).
-  final double cents;
-
-  final TuningStatus status;
-
-  /// Índice da corda alvo no preset, ou null no modo cromático.
-  final int? stringIndex;
-
-  String get targetName => midiToName(targetMidi);
-}
+import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/pitch_estimate.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
+import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
+import 'package:lattos_tuner/services/preset_repository.dart';
 
 /// Orquestra a fonte de pitch, o preset ativo e o estado exibido pela UI.
 class TunerController extends ChangeNotifier {

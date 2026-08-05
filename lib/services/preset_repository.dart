@@ -1,9 +1,8 @@
 import 'dart:convert';
 
+import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/tuning_preset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../models/note.dart';
-import '../models/tuning_preset.dart';
 
 /// Persistência dos presets customizados, do preset ativo e da calibração
 /// do A4, usando [SharedPreferences].

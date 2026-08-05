@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lattos_tuner/audio/tuner_audio_service.dart';
-import 'package:lattos_tuner/audio/yin_pitch_detector.dart';
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/pitch_estimate.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
 import 'package:lattos_tuner/services/preset_repository.dart';
-import 'package:lattos_tuner/services/tuner_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakePitchSource implements PitchSource {

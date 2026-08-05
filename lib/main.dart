@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
+import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
+import 'package:lattos_tuner/services/preset_repository.dart';
+import 'package:lattos_tuner/views/screens/tuner_screen.dart';
+import 'package:lattos_tuner/views/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'audio/tuner_audio_service.dart';
-import 'screens/tuner_screen.dart';
-import 'services/preset_repository.dart';
-import 'services/tuner_controller.dart';
-import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

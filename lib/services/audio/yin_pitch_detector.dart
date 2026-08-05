@@ -1,15 +1,6 @@
 import 'dart:typed_data';
 
-/// Resultado de uma estimativa de pitch.
-class PitchEstimate {
-  const PitchEstimate({required this.frequency, required this.probability});
-
-  /// Frequência fundamental estimada, em Hz.
-  final double frequency;
-
-  /// Confiança da estimativa, entre 0 e 1.
-  final double probability;
-}
+import 'package:lattos_tuner/models/pitch_estimate.dart';
 
 /// Detector de pitch usando o algoritmo YIN
 /// (de Cheveigné & Kawahara, 2002).

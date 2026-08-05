@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:lattos_tuner/models/pitch_estimate.dart';
+import 'package:lattos_tuner/services/audio/yin_pitch_detector.dart';
 import 'package:record/record.dart';
-
-import 'yin_pitch_detector.dart';
 
 /// Fonte de estimativas de pitch. Abstração que permite substituir o
 /// microfone por dados sintéticos em testes.

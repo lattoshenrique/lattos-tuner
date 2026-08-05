@@ -47,20 +47,33 @@ senoides sintetizadas (precisão < 2 cents), o parsing de PCM16 em chunks
 irregulares, a persistência de presets e a lógica do afinador (seleção de
 corda, status, calibração).
 
-## Arquitetura
+## Arquitetura (MVC)
 
 ```
 lib/
-├── audio/
-│   ├── yin_pitch_detector.dart   # YIN puro em Dart
-│   └── tuner_audio_service.dart  # microfone → PCM16 → decimação → pitch
-├── models/
-│   ├── note.dart                 # conversões MIDI/Hz/cents e nomes de notas
-│   └── tuning_preset.dart        # modelo de preset (+ JSON)
-├── services/
-│   ├── preset_repository.dart    # presets embutidos + persistência local
-│   └── tuner_controller.dart     # estado do afinador (ChangeNotifier)
-├── screens/                      # afinador, lista de presets, editor
-├── widgets/                      # gauge, display de nota, chips de cordas
-└── theme.dart                    # paleta, tema Material 3 e transições
+├── models/                        # M — dados e regras de domínio
+│   ├── note.dart                  #   conversões MIDI/Hz/cents e nomes de notas
+│   ├── pitch_estimate.dart        #   estimativa de pitch (Hz + confiança)
+│   ├── tuner_reading.dart         #   leitura do afinador, status e modo de alvo
+│   └── tuning_preset.dart         #   preset de afinação (+ JSON)
+├── views/                         # V — apresentação (observa o controller)
+│   ├── theme.dart                 #   paleta, tema Material 3 e transições
+│   ├── screens/                   #   afinador, lista de presets, editor
+│   └── widgets/                   #   gauge, display de nota, chips de cordas
+├── controllers/                   # C — orquestração e estado observável
+│   └── tuner_controller.dart      #   ChangeNotifier: pitch → leitura → UI
+└── services/                      # infraestrutura usada pelo controller
+    ├── audio/
+    │   ├── yin_pitch_detector.dart    # YIN puro em Dart
+    │   └── tuner_audio_service.dart   # microfone → PCM16 → decimação → pitch
+    └── preset_repository.dart         # presets embutidos + persistência local
 ```
+
+Fluxo: `View → Controller → Service/Model`, com a View reagindo ao
+`ChangeNotifier` do Controller e os tipos de estado vivendo em `models/`.
+
+## VS Code
+
+O projeto inclui `.vscode/launch.json` com quatro configurações: **debug**,
+**profile**, **release** e **testes** (F5 para rodar, ou o painel
+*Run and Debug*).

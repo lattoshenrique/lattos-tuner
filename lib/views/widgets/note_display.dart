@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../theme.dart';
+import 'package:lattos_tuner/views/theme.dart';
 
 /// Nome da nota alvo em destaque, com transição animada entre notas e anéis
 /// pulsantes quando afinado.

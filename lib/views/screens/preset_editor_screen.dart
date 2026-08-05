@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../models/note.dart';
-import '../models/tuning_preset.dart';
-import '../services/tuner_controller.dart';
-import '../theme.dart';
-import '../widgets/string_chips.dart' show noteFrequencyLabel;
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
+import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/string_chips.dart'
+    show noteFrequencyLabel;
 
 /// Criação e edição de presets customizados.
 ///

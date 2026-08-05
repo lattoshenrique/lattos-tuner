@@ -2,9 +2,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lattos_tuner/audio/tuner_audio_service.dart';
-import 'package:lattos_tuner/audio/yin_pitch_detector.dart';
 import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/pitch_estimate.dart';
+import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
 
 /// Gera PCM16 little-endian mono a 44,1 kHz.
 Uint8List pcm16Sine(double frequency, int sampleCount, {double amplitude = 0.4}) {

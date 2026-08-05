@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lattos_tuner/audio/yin_pitch_detector.dart';
 import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/services/audio/yin_pitch_detector.dart';
 
 Float64List sineWave(
   double frequency,

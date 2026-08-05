@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../models/note.dart';
-import '../theme.dart';
+import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/views/theme.dart';
 
 /// Fileira de "pílulas" com as cordas do preset ativo.
 ///

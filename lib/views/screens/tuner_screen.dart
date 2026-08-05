@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../models/note.dart';
-import '../services/tuner_controller.dart';
-import '../theme.dart';
-import '../widgets/note_display.dart';
-import '../widgets/string_chips.dart';
-import '../widgets/tuner_gauge.dart';
-import 'presets_screen.dart';
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
+import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
+import 'package:lattos_tuner/views/screens/presets_screen.dart';
+import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/note_display.dart';
+import 'package:lattos_tuner/views/widgets/string_chips.dart';
+import 'package:lattos_tuner/views/widgets/tuner_gauge.dart';
 
 /// Tela principal: medidor, nota alvo, cordas do preset e status.
 class TunerScreen extends StatefulWidget {

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../models/tuning_preset.dart';
-import '../services/tuner_controller.dart';
-import '../theme.dart';
-import 'preset_editor_screen.dart';
+import 'package:lattos_tuner/controllers/tuner_controller.dart';
+import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
+import 'package:lattos_tuner/views/theme.dart';
 
 /// Lista de afinações: embutidas e criadas pelo usuário.
 class PresetsScreen extends StatefulWidget {

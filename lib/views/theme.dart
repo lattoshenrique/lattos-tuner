@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'services/tuner_controller.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
 
 /// Paleta do app: fundo profundo, verde-menta para "afinado", violeta como
 /// acento neutro e âmbar/coral para desvios.
