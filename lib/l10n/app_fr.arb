@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "Cavaquinho",
   "instrumentOther": "Autre",
   "presetStandardGuitar": "Standard (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "Demi-ton en dessous (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "Un ton en dessous (D)",
+  "presetCStandard": "Standard en C",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7 cordes (B E A D G B E)",
   "presetBassStandard": "Basse – Standard (E A D G)",
   "presetBass5": "Basse – 5 cordes",
   "presetUkulele": "Ukulélé – Standard (G C E A)",
-  "presetCavaquinho": "Cavaquinho (D G B D)"
+  "presetCavaquinho": "Cavaquinho (D G B D)",
+  "presetMandolin": "Mandoline (G D A E)"
 }

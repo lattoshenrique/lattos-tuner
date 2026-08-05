@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "Кавакинью",
   "instrumentOther": "Другой",
   "presetStandardGuitar": "Стандартный (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "На полтона ниже (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "На тон ниже (D)",
+  "presetCStandard": "Строй C",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7 струн (B E A D G B E)",
   "presetBassStandard": "Бас – Стандартный (E A D G)",
   "presetBass5": "Бас – 5 струн",
   "presetUkulele": "Укулеле – Стандартный (G C E A)",
-  "presetCavaquinho": "Кавакинью (D G B D)"
+  "presetCavaquinho": "Кавакинью (D G B D)",
+  "presetMandolin": "Мандолина (G D A E)"
 }

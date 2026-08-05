@@ -218,7 +218,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get presetStandardGuitar => '스탠더드 (E A D G B E)';
 
   @override
-  String get presetSoad => 'SOAD – Drop C';
+  String get presetDropC => 'Drop C';
 
   @override
   String get presetDropD => 'Drop D';
@@ -230,10 +230,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get presetDropCSharp => 'Drop C#';
 
   @override
+  String get presetDropB => 'Drop B';
+
+  @override
+  String get presetDropA => 'Drop A';
+
+  @override
+  String get presetOpenD => 'Open D';
+
+  @override
+  String get presetDStandard => '온음 내림 (D)';
+
+  @override
+  String get presetCStandard => 'C 스탠더드';
+
+  @override
   String get presetDadgad => 'DADGAD';
 
   @override
   String get presetOpenG => 'Open G';
+
+  @override
+  String get presetGuitar7 => '7현 (B E A D G B E)';
 
   @override
   String get presetBassStandard => '베이스 – 스탠더드 (E A D G)';
@@ -246,4 +264,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get presetCavaquinho => '카바키뉴 (D G B D)';
+
+  @override
+  String get presetMandolin => '만돌린 (G D A E)';
 }

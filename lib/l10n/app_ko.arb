@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "카바키뉴",
   "instrumentOther": "기타 악기",
   "presetStandardGuitar": "스탠더드 (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "반음 내림 (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "온음 내림 (D)",
+  "presetCStandard": "C 스탠더드",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7현 (B E A D G B E)",
   "presetBassStandard": "베이스 – 스탠더드 (E A D G)",
   "presetBass5": "베이스 – 5현",
   "presetUkulele": "우쿨렐레 – 스탠더드 (G C E A)",
-  "presetCavaquinho": "카바키뉴 (D G B D)"
+  "presetCavaquinho": "카바키뉴 (D G B D)",
+  "presetMandolin": "만돌린 (G D A E)"
 }

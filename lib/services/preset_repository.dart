@@ -22,8 +22,10 @@ class PresetRepository {
       isBuiltIn: true,
     ),
     TuningPreset(
+      // O id preserva o nome histórico ("SOAD") para não invalidar o
+      // preset ativo salvo em versões anteriores.
       id: 'builtin_soad_drop_c',
-      name: 'SOAD – Drop C',
+      name: 'Drop C',
       instrument: Instrument.guitar,
       notes: ['C2', 'G2', 'C3', 'F3', 'A3', 'D4'],
       isBuiltIn: true,
@@ -50,6 +52,34 @@ class PresetRepository {
       isBuiltIn: true,
     ),
     TuningPreset(
+      id: 'builtin_drop_b',
+      name: 'Drop B',
+      instrument: Instrument.guitar,
+      notes: ['B1', 'F#2', 'B2', 'E3', 'G#3', 'C#4'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_drop_a',
+      name: 'Drop A',
+      instrument: Instrument.guitar,
+      notes: ['A1', 'E2', 'A2', 'D3', 'F#3', 'B3'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_d_standard',
+      name: 'Um tom abaixo (D)',
+      instrument: Instrument.guitar,
+      notes: ['D2', 'G2', 'C3', 'F3', 'A3', 'D4'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_c_standard',
+      name: 'Padrão em C',
+      instrument: Instrument.guitar,
+      notes: ['C2', 'F2', 'A#2', 'D#3', 'G3', 'C4'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
       id: 'builtin_dadgad',
       name: 'DADGAD',
       instrument: Instrument.guitar,
@@ -61,6 +91,20 @@ class PresetRepository {
       name: 'Open G',
       instrument: Instrument.guitar,
       notes: ['D2', 'G2', 'D3', 'G3', 'B3', 'D4'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_open_d',
+      name: 'Open D',
+      instrument: Instrument.guitar,
+      notes: ['D2', 'A2', 'D3', 'F#3', 'A3', 'D4'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_guitar_7',
+      name: '7 cordas (B E A D G B E)',
+      instrument: Instrument.guitar,
+      notes: ['B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'],
       isBuiltIn: true,
     ),
     TuningPreset(
@@ -89,6 +133,13 @@ class PresetRepository {
       name: 'Cavaquinho (D G B D)',
       instrument: Instrument.cavaquinho,
       notes: ['D4', 'G4', 'B4', 'D5'],
+      isBuiltIn: true,
+    ),
+    TuningPreset(
+      id: 'builtin_mandolin',
+      name: 'Bandolim (G D A E)',
+      instrument: Instrument.other,
+      notes: ['G3', 'D4', 'A4', 'E5'],
       isBuiltIn: true,
     ),
   ];

@@ -43,16 +43,19 @@ ThemeData buildAppTheme() {
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.background,
+    // Fonte da marca (Google Fonts, licença OFL, embarcada como asset).
+    fontFamily: 'Poppins',
     splashFactory: InkSparkle.splashFactory,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
       titleTextStyle: TextStyle(
+        fontFamily: 'Poppins',
         color: AppColors.textPrimary,
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.4,
+        fontSize: 17,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.1,
       ),
     ),
     cardTheme: CardThemeData(

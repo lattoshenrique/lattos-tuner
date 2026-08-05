@@ -218,7 +218,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get presetStandardGuitar => 'Стандартный (E A D G B E)';
 
   @override
-  String get presetSoad => 'SOAD – Drop C';
+  String get presetDropC => 'Drop C';
 
   @override
   String get presetDropD => 'Drop D';
@@ -230,10 +230,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get presetDropCSharp => 'Drop C#';
 
   @override
+  String get presetDropB => 'Drop B';
+
+  @override
+  String get presetDropA => 'Drop A';
+
+  @override
+  String get presetOpenD => 'Open D';
+
+  @override
+  String get presetDStandard => 'На тон ниже (D)';
+
+  @override
+  String get presetCStandard => 'Строй C';
+
+  @override
   String get presetDadgad => 'DADGAD';
 
   @override
   String get presetOpenG => 'Open G';
+
+  @override
+  String get presetGuitar7 => '7 струн (B E A D G B E)';
 
   @override
   String get presetBassStandard => 'Бас – Стандартный (E A D G)';
@@ -246,4 +264,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get presetCavaquinho => 'Кавакинью (D G B D)';
+
+  @override
+  String get presetMandolin => 'Мандолина (G D A E)';
 }

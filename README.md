@@ -35,9 +35,10 @@ cavaquinho e o que mais você inventar.
   soltando a tarraxa) e o alvo anterior decidem — ao descer do padrão para
   o SOAD (Drop C), o E2 solto mira **C2** e pede para *soltar*, não G2.
 - **Presets de afinação**:
-  - Embutidos: Padrão (E A D G B E), **SOAD – Drop C (C G C F A D)**, Drop D,
-    Meio tom abaixo (Eb), Drop C#, DADGAD, Open G, Baixo 4 e 5 cordas,
-    Ukulele e Cavaquinho.
+  - Embutidos: Padrão (E A D G B E), **Drop C (C G C F A D)**, Drop D,
+    Drop C#, Drop B, Drop A, Meio tom abaixo (Eb), Um tom abaixo (D),
+    Padrão em C, DADGAD, Open G, Open D, Guitarra 7 cordas, Baixo 4 e 5
+    cordas, Ukulele, Cavaquinho e Bandolim.
   - **Customizados**: crie, edite, duplique e exclua presets seus — salvos no
     aparelho e mantidos entre sessões — com escolha de instrumento.
   - **Captura pelo afinador**: no modo cromático, cada nota estável entra na
@@ -64,11 +65,14 @@ cavaquinho e o que mais você inventar.
   Material Motion (fade-through e shared-axis), efeitos Hero, entrada
   escalonada, haptics e Material 3.
 - **Identidade visual completa**: logo oficial (palheta + medidor) com
-  degradê menta→violeta e efeito neon, ícone de launcher (incluindo
-  adaptive icon Android e monocromático) e splash screen nativa (Android
-  12+ e iOS) gerados a partir de `assets/branding/` — recrie com
-  `dart run flutter_launcher_icons` e
+  degradê menta→violeta e efeito neon — no app bar, no ícone de launcher
+  (incluindo adaptive icon Android e monocromático) e na splash screen
+  nativa (Android 12+ e iOS), gerados a partir de `assets/branding/` —
+  recrie com `dart run flutter_launcher_icons` e
   `dart run flutter_native_splash:create --path=flutter_native_splash.yaml`.
+- **Tipografia da marca**: [Poppins](https://fonts.google.com/specimen/Poppins)
+  (Google Fonts, licença OFL) embarcada em `assets/fonts/` — funciona
+  offline, sem download em tempo de execução.
 
 ## Como rodar
 

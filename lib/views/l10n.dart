@@ -26,16 +26,23 @@ extension InstrumentL10n on Instrument {
 extension TuningPresetL10n on TuningPreset {
   String displayName(AppLocalizations l10n) => switch (id) {
     'builtin_guitar_standard' => l10n.presetStandardGuitar,
-    'builtin_soad_drop_c' => l10n.presetSoad,
+    'builtin_soad_drop_c' => l10n.presetDropC,
     'builtin_drop_d' => l10n.presetDropD,
     'builtin_half_step_down' => l10n.presetHalfStepDown,
     'builtin_drop_c_sharp' => l10n.presetDropCSharp,
+    'builtin_drop_b' => l10n.presetDropB,
+    'builtin_drop_a' => l10n.presetDropA,
+    'builtin_d_standard' => l10n.presetDStandard,
+    'builtin_c_standard' => l10n.presetCStandard,
     'builtin_dadgad' => l10n.presetDadgad,
     'builtin_open_g' => l10n.presetOpenG,
+    'builtin_open_d' => l10n.presetOpenD,
+    'builtin_guitar_7' => l10n.presetGuitar7,
     'builtin_bass_standard' => l10n.presetBassStandard,
     'builtin_bass_5_strings' => l10n.presetBass5,
     'builtin_ukulele' => l10n.presetUkulele,
     'builtin_cavaquinho' => l10n.presetCavaquinho,
+    'builtin_mandolin' => l10n.presetMandolin,
     _ => name,
   };
 }

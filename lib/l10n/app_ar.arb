@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "كافاكينيو",
   "instrumentOther": "أخرى",
   "presetStandardGuitar": "قياسي (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "نصف درجة أدنى (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "نغمة كاملة أدنى (D)",
+  "presetCStandard": "قياسي C",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7 أوتار (B E A D G B E)",
   "presetBassStandard": "بيس – قياسي (E A D G)",
   "presetBass5": "بيس – 5 أوتار",
   "presetUkulele": "يوكوليلي – قياسي (G C E A)",
-  "presetCavaquinho": "كافاكينيو (D G B D)"
+  "presetCavaquinho": "كافاكينيو (D G B D)",
+  "presetMandolin": "ماندولين (G D A E)"
 }

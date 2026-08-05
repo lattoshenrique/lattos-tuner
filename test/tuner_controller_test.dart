@@ -68,7 +68,7 @@ void main() {
     final restored = await makeController(
       initialPrefs: {PresetRepository.activePresetKey: 'builtin_soad_drop_c'},
     );
-    expect(restored.activePreset.name, contains('SOAD'));
+    expect(restored.activePreset.name, 'Drop C');
   });
 
   group('leituras', () {

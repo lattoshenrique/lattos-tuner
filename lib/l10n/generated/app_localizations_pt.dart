@@ -218,7 +218,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get presetStandardGuitar => 'Padrão (E A D G B E)';
 
   @override
-  String get presetSoad => 'SOAD – Drop C';
+  String get presetDropC => 'Drop C';
 
   @override
   String get presetDropD => 'Drop D';
@@ -230,10 +230,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get presetDropCSharp => 'Drop C#';
 
   @override
+  String get presetDropB => 'Drop B';
+
+  @override
+  String get presetDropA => 'Drop A';
+
+  @override
+  String get presetOpenD => 'Open D';
+
+  @override
+  String get presetDStandard => 'Um tom abaixo (D)';
+
+  @override
+  String get presetCStandard => 'Padrão em C';
+
+  @override
   String get presetDadgad => 'DADGAD';
 
   @override
   String get presetOpenG => 'Open G';
+
+  @override
+  String get presetGuitar7 => '7 cordas (B E A D G B E)';
 
   @override
   String get presetBassStandard => 'Baixo – Padrão (E A D G)';
@@ -246,4 +264,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get presetCavaquinho => 'Cavaquinho (D G B D)';
+
+  @override
+  String get presetMandolin => 'Bandolim (G D A E)';
 }

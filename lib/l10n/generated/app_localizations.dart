@@ -514,11 +514,11 @@ abstract class AppLocalizations {
   /// **'Standard (E A D G B E)'**
   String get presetStandardGuitar;
 
-  /// No description provided for @presetSoad.
+  /// No description provided for @presetDropC.
   ///
   /// In en, this message translates to:
-  /// **'SOAD – Drop C'**
-  String get presetSoad;
+  /// **'Drop C'**
+  String get presetDropC;
 
   /// No description provided for @presetDropD.
   ///
@@ -538,6 +538,36 @@ abstract class AppLocalizations {
   /// **'Drop C#'**
   String get presetDropCSharp;
 
+  /// No description provided for @presetDropB.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop B'**
+  String get presetDropB;
+
+  /// No description provided for @presetDropA.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop A'**
+  String get presetDropA;
+
+  /// No description provided for @presetOpenD.
+  ///
+  /// In en, this message translates to:
+  /// **'Open D'**
+  String get presetOpenD;
+
+  /// No description provided for @presetDStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole step down (D)'**
+  String get presetDStandard;
+
+  /// No description provided for @presetCStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'C standard'**
+  String get presetCStandard;
+
   /// No description provided for @presetDadgad.
   ///
   /// In en, this message translates to:
@@ -549,6 +579,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open G'**
   String get presetOpenG;
+
+  /// No description provided for @presetGuitar7.
+  ///
+  /// In en, this message translates to:
+  /// **'7-string (B E A D G B E)'**
+  String get presetGuitar7;
 
   /// No description provided for @presetBassStandard.
   ///
@@ -573,6 +609,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cavaquinho (D G B D)'**
   String get presetCavaquinho;
+
+  /// No description provided for @presetMandolin.
+  ///
+  /// In en, this message translates to:
+  /// **'Mandolin (G D A E)'**
+  String get presetMandolin;
 }
 
 class _AppLocalizationsDelegate

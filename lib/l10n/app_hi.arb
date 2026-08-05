@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "कवाकिन्यो",
   "instrumentOther": "अन्य",
   "presetStandardGuitar": "मानक (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "आधा स्वर नीचे (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "एक स्वर नीचे (D)",
+  "presetCStandard": "C मानक",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7 तार (B E A D G B E)",
   "presetBassStandard": "बेस – मानक (E A D G)",
   "presetBass5": "बेस – 5 तार",
   "presetUkulele": "उकुलेले – मानक (G C E A)",
-  "presetCavaquinho": "कवाकिन्यो (D G B D)"
+  "presetCavaquinho": "कवाकिन्यो (D G B D)",
+  "presetMandolin": "मैंडोलिन (G D A E)"
 }

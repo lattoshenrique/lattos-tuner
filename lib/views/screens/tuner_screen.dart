@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -43,18 +44,28 @@ class _TunerScreenState extends State<TunerScreen>
 
   TunerController get controller => widget.controller;
 
+  /// Liga/desliga o wakelock sem deixar uma falha do plugin (plataformas
+  /// sem suporte, ambiente de teste) derrubar o afinador.
+  void _setWakelock(bool enabled) {
+    unawaited(
+      (enabled ? WakelockPlus.enable() : WakelockPlus.disable()).catchError(
+        (_) {},
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     controller.addListener(_onControllerChange);
-    WakelockPlus.enable();
+    _setWakelock(true);
     WidgetsBinding.instance.addPostFrameCallback((_) => controller.start());
   }
 
   @override
   void dispose() {
-    WakelockPlus.disable();
+    _setWakelock(false);
     WidgetsBinding.instance.removeObserver(this);
     controller.removeListener(_onControllerChange);
     _entrance.dispose();
@@ -64,11 +75,11 @@ class _TunerScreenState extends State<TunerScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      WakelockPlus.enable();
+      _setWakelock(true);
       controller.start();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      WakelockPlus.disable();
+      _setWakelock(false);
       controller.stop();
     }
   }
@@ -171,20 +182,37 @@ class _TunerScreenState extends State<TunerScreen>
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(context.l10n.tunerTitle),
-                Text(
-                  context.l10n.tagline,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: AppColors.textSecondary.withValues(alpha: 0.9),
+            // scaleDown mantém marca e wordmark inteiros mesmo em telas
+            // estreitas ou com traduções mais longas.
+            title: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/branding/logo_mark.png',
+                    width: 32,
+                    height: 32,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 9),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(context.l10n.tunerTitle),
+                      Text(
+                        context.l10n.tagline,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                          color: AppColors.textSecondary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             actions: [
               IconButton(
@@ -233,45 +261,56 @@ class _TunerScreenState extends State<TunerScreen>
                               ),
                             ),
                             Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _entranceSlot(
-                                    1,
-                                    TunerGauge(
-                                      cents: reading?.cents,
-                                      color: accent,
-                                      active: controller.isRunning,
+                              // O bloco central tem tamanho natural fixo; em
+                              // telas curtas ele encolhe junto em vez de
+                              // estourar, e em telas largas o medidor para
+                              // de crescer.
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _entranceSlot(
+                                      1,
+                                      SizedBox(
+                                        width: 340,
+                                        child: TunerGauge(
+                                          cents: reading?.cents,
+                                          color: accent,
+                                          active: controller.isRunning,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _entranceSlot(
-                                    2,
-                                    NoteDisplay(
-                                      noteName: reading == null
-                                          ? null
-                                          : kNoteNames[reading.targetMidi % 12],
-                                      octave: reading == null
-                                          ? null
-                                          : (reading.targetMidi ~/ 12) - 1,
-                                      color: accent,
-                                      inTune: status == TuningStatus.inTune,
+                                    const SizedBox(height: 8),
+                                    _entranceSlot(
+                                      2,
+                                      NoteDisplay(
+                                        noteName: reading == null
+                                            ? null
+                                            : kNoteNames[reading.targetMidi %
+                                                  12],
+                                        octave: reading == null
+                                            ? null
+                                            : (reading.targetMidi ~/ 12) - 1,
+                                        color: accent,
+                                        inTune: status == TuningStatus.inTune,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _entranceSlot(
-                                    3,
-                                    _ReadoutRow(reading: reading),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _entranceSlot(
-                                    4,
-                                    _StatusPill(
-                                      controller: controller,
-                                      accent: accent,
+                                    const SizedBox(height: 4),
+                                    _entranceSlot(
+                                      3,
+                                      _ReadoutRow(reading: reading),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 12),
+                                    _entranceSlot(
+                                      4,
+                                      _StatusPill(
+                                        controller: controller,
+                                        accent: accent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             _entranceSlot(

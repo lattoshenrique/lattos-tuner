@@ -71,8 +71,11 @@ class _GaugePainter extends CustomPainter {
 
   static const double _sweepDegrees = 70.0;
 
+  /// Ângulo do ponteiro medido a partir da vertical (0 = topo, positivo à
+  /// direita). As direções usam (sin, −cos) e os arcos somam −π/2 para
+  /// converter à convenção do canvas (0 = eixo +x).
   double _angleForCents(double value) =>
-      -math.pi / 2 + (value / 50.0) * (_sweepDegrees * math.pi / 180.0);
+      (value / 50.0) * (_sweepDegrees * math.pi / 180.0);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -195,6 +198,7 @@ class _GaugePainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: TextStyle(
+          fontFamily: 'Poppins',
           color: Colors.white.withValues(alpha: 0.45),
           fontSize: 14,
           fontWeight: FontWeight.w600,

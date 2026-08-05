@@ -217,7 +217,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get presetStandardGuitar => 'スタンダード (E A D G B E)';
 
   @override
-  String get presetSoad => 'SOAD – Drop C';
+  String get presetDropC => 'Drop C';
 
   @override
   String get presetDropD => 'Drop D';
@@ -229,10 +229,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get presetDropCSharp => 'Drop C#';
 
   @override
+  String get presetDropB => 'Drop B';
+
+  @override
+  String get presetDropA => 'Drop A';
+
+  @override
+  String get presetOpenD => 'Open D';
+
+  @override
+  String get presetDStandard => '全音下げ (D)';
+
+  @override
+  String get presetCStandard => 'C スタンダード';
+
+  @override
   String get presetDadgad => 'DADGAD';
 
   @override
   String get presetOpenG => 'Open G';
+
+  @override
+  String get presetGuitar7 => '7弦 (B E A D G B E)';
 
   @override
   String get presetBassStandard => 'ベース – スタンダード (E A D G)';
@@ -245,4 +263,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get presetCavaquinho => 'カバキーニョ (D G B D)';
+
+  @override
+  String get presetMandolin => 'マンドリン (G D A E)';
 }

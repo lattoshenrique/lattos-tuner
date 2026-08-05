@@ -13,12 +13,28 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('presets embutidos', () {
-    test('incluem a afinação SOAD (Drop C)', () {
-      final soad = PresetRepository.builtInPresets.firstWhere(
+    test('incluem a afinação Drop C (C G C F A D)', () {
+      final dropC = PresetRepository.builtInPresets.firstWhere(
         (p) => p.id == 'builtin_soad_drop_c',
       );
-      expect(soad.name, contains('SOAD'));
-      expect(soad.notes, ['C2', 'G2', 'C3', 'F3', 'A3', 'D4']);
+      expect(dropC.name, 'Drop C');
+      expect(dropC.notes, ['C2', 'G2', 'C3', 'F3', 'A3', 'D4']);
+    });
+
+    test('incluem os drops populares e afinações abertas', () {
+      final ids = PresetRepository.builtInPresets.map((p) => p.id).toSet();
+      expect(
+        ids,
+        containsAll([
+          'builtin_drop_b',
+          'builtin_drop_a',
+          'builtin_d_standard',
+          'builtin_c_standard',
+          'builtin_open_d',
+          'builtin_guitar_7',
+          'builtin_mandolin',
+        ]),
+      );
     });
 
     test('todas as notas são válidas e ordenadas da grave à aguda', () {

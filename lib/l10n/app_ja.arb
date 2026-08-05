@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "カバキーニョ",
   "instrumentOther": "その他",
   "presetStandardGuitar": "スタンダード (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "半音下げ (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "全音下げ (D)",
+  "presetCStandard": "C スタンダード",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7弦 (B E A D G B E)",
   "presetBassStandard": "ベース – スタンダード (E A D G)",
   "presetBass5": "ベース – 5 弦",
   "presetUkulele": "ウクレレ – スタンダード (G C E A)",
-  "presetCavaquinho": "カバキーニョ (D G B D)"
+  "presetCavaquinho": "カバキーニョ (D G B D)",
+  "presetMandolin": "マンドリン (G D A E)"
 }

@@ -66,14 +66,21 @@
   "instrumentCavaquinho": "卡瓦基纽",
   "instrumentOther": "其他",
   "presetStandardGuitar": "标准 (E A D G B E)",
-  "presetSoad": "SOAD – Drop C",
+  "presetDropC": "Drop C",
   "presetDropD": "Drop D",
   "presetHalfStepDown": "降半音 (Eb)",
   "presetDropCSharp": "Drop C#",
+  "presetDropB": "Drop B",
+  "presetDropA": "Drop A",
+  "presetOpenD": "Open D",
+  "presetDStandard": "降全音 (D)",
+  "presetCStandard": "C 标准",
   "presetDadgad": "DADGAD",
   "presetOpenG": "Open G",
+  "presetGuitar7": "7弦 (B E A D G B E)",
   "presetBassStandard": "贝斯 – 标准 (E A D G)",
   "presetBass5": "贝斯 – 5 弦",
   "presetUkulele": "尤克里里 – 标准 (G C E A)",
-  "presetCavaquinho": "卡瓦基纽 (D G B D)"
+  "presetCavaquinho": "卡瓦基纽 (D G B D)",
+  "presetMandolin": "曼陀林 (G D A E)"
 }
