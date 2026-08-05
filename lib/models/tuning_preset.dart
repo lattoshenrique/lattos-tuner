@@ -1,14 +1,11 @@
-/// Tipo de instrumento de um preset, usado para ícone e organização.
+/// Tipo de instrumento de um preset, usado para filtro e organização.
+/// O rótulo exibido é localizado na camada de views (`InstrumentL10n`).
 enum Instrument {
-  guitar('Guitarra/Violão'),
-  bass('Baixo'),
-  ukulele('Ukulele'),
-  cavaquinho('Cavaquinho'),
-  other('Outro');
-
-  const Instrument(this.label);
-
-  final String label;
+  guitar,
+  bass,
+  ukulele,
+  cavaquinho,
+  other;
 
   static Instrument fromName(String? name) => Instrument.values.firstWhere(
     (value) => value.name == name,

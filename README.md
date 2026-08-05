@@ -33,6 +33,11 @@ cavaquinho e o que mais você inventar.
 - **Tela sempre acesa** enquanto o afinador está em primeiro plano
   (wakelock).
 - **Calibração do A4** (415–466 Hz, padrão 440 Hz).
+- **i18n com detecção automática de idioma** (padrão `flutter_localizations`
+  + ARB): inglês, português, espanhol, francês, alemão, italiano, japonês,
+  chinês, coreano, russo, hindi e árabe (com RTL). O idioma do aparelho é
+  detectado automaticamente; inglês é o fallback. Números (Hz/cents) usam o
+  separador decimal — e os dígitos — do idioma ativo.
 - **UI moderna**: tema escuro com fundo "aurora" animado que reage ao estado
   da afinação, medidor com ponteiro e escala que "acende", transições
   Material Motion (fade-through e shared-axis), efeitos Hero, entrada
@@ -63,6 +68,7 @@ corda, status, calibração).
 
 ```
 lib/
+├── l10n/                          # traduções ARB (12 idiomas) + código gerado
 ├── models/                        # M — dados e regras de domínio
 │   ├── note.dart                  #   conversões MIDI/Hz/cents e nomes de notas
 │   ├── pitch_estimate.dart        #   estimativa de pitch (Hz + confiança)

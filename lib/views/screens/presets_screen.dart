@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
 
@@ -61,20 +62,20 @@ class _PresetsScreenState extends State<PresetsScreen>
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceBright,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Excluir preset?'),
+        title: Text(context.l10n.deleteDialogTitle),
         content: Text(
-          '"${preset.name}" será removido permanentemente.',
+          context.l10n.deleteDialogBody(preset.displayName(context.l10n)),
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.coral),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -121,15 +122,15 @@ class _PresetsScreenState extends State<PresetsScreen>
             backgroundColor: AppColors.mint,
             foregroundColor: const Color(0xFF04291C),
             icon: const Icon(Icons.add_rounded),
-            label: const Text(
-              'Novo preset',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            label: Text(
+              context.l10n.newPreset,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
           body: CustomScrollView(
             slivers: [
-              const SliverAppBar.large(
-                title: Text('Afinações'),
+              SliverAppBar.large(
+                title: Text(context.l10n.presetsTitle),
                 backgroundColor: AppColors.background,
               ),
               SliverToBoxAdapter(
@@ -149,7 +150,7 @@ class _PresetsScreenState extends State<PresetsScreen>
                 sliver: SliverToBoxAdapter(
                   child: _staggered(
                     itemIndex++,
-                    const _SectionHeader('Meus presets'),
+                    _SectionHeader(context.l10n.sectionMyPresets),
                   ),
                 ),
               ),
@@ -175,17 +176,17 @@ class _PresetsScreenState extends State<PresetsScreen>
                       onTap: () => _select(custom[i]),
                       menu: [
                         _MenuAction(
-                          'Editar',
+                          context.l10n.menuEdit,
                           Icons.edit_rounded,
                           () => _openEditor(existing: custom[i]),
                         ),
                         _MenuAction(
-                          'Duplicar',
+                          context.l10n.menuDuplicate,
                           Icons.copy_rounded,
                           () => _openEditor(base: custom[i]),
                         ),
                         _MenuAction(
-                          'Excluir',
+                          context.l10n.menuDelete,
                           Icons.delete_rounded,
                           () => _confirmDelete(custom[i]),
                           destructive: true,
@@ -200,7 +201,7 @@ class _PresetsScreenState extends State<PresetsScreen>
                 sliver: SliverToBoxAdapter(
                   child: _staggered(
                     itemIndex + custom.length,
-                    const _SectionHeader('Afinações padrão'),
+                    _SectionHeader(context.l10n.sectionBuiltIn),
                   ),
                 ),
               ),
@@ -218,7 +219,7 @@ class _PresetsScreenState extends State<PresetsScreen>
                         onTap: () => _select(preset),
                         menu: [
                           _MenuAction(
-                            'Duplicar e editar',
+                            context.l10n.menuDuplicateEdit,
                             Icons.copy_rounded,
                             () => _openEditor(base: preset),
                           ),
@@ -272,9 +273,9 @@ class _InstrumentFilterBar extends StatelessWidget {
       child: Row(
         children: [
           for (final entry in <(Instrument?, String)>[
-            (null, 'Todos'),
+            (null, context.l10n.filterAll),
             for (final instrument in Instrument.values)
-              (instrument, instrument.label),
+              (instrument, instrument.label(context.l10n)),
           ])
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -326,12 +327,8 @@ class _EmptyCustomCard extends StatelessWidget {
           Expanded(
             child: Text(
               filtered
-                  ? 'Nenhum preset seu para esse instrumento ainda — crie um '
-                        'no botão abaixo ou capture uma afinação no modo '
-                        'cromático do afinador.'
-                  : 'Crie seu primeiro preset com a afinação que você usa — '
-                        'duplique uma afinação padrão ou capture a afinação '
-                        'do seu instrumento no modo cromático do afinador.',
+                  ? context.l10n.emptyCustomFiltered
+                  : context.l10n.emptyCustom,
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 height: 1.45,
@@ -448,7 +445,7 @@ class _PresetTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        preset.name,
+                        preset.displayName(context.l10n),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -459,7 +456,8 @@ class _PresetTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${preset.instrument.label} · ${preset.notes.join(' ')}',
+                        '${preset.instrument.label(context.l10n)} · '
+                        '${preset.notes.join(' ')}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

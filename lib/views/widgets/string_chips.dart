@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lattos_tuner/models/note.dart';
+import 'package:lattos_tuner/views/l10n.dart' show formatDecimal;
 import 'package:lattos_tuner/views/theme.dart';
 
 /// Fileira de "pílulas" com as cordas do preset ativo.
@@ -140,9 +141,14 @@ class _StringChip extends StatelessWidget {
 }
 
 /// Rótulo auxiliar exibindo a frequência-alvo de uma nota, ex.: "110,0 Hz".
-String noteFrequencyLabel(String noteName, {double a4 = kDefaultA4}) {
+String noteFrequencyLabel(
+  String noteName, {
+  double a4 = kDefaultA4,
+  Locale locale = const Locale('en'),
+  String hzUnit = 'Hz',
+}) {
   final midi = nameToMidi(noteName);
   if (midi == null) return '';
   final frequency = midiToFrequency(midi.toDouble(), a4: a4);
-  return '${frequency.toStringAsFixed(1).replaceAll('.', ',')} Hz';
+  return '${formatDecimal(frequency, locale)} $hzUnit';
 }

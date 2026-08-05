@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
 import 'package:lattos_tuner/services/preset_repository.dart';
+import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/tuner_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,9 +38,13 @@ class LattosTunerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lattos Tuner',
+      onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
+      // O idioma é resolvido automaticamente a partir do idioma do
+      // aparelho; inglês é o fallback quando não há tradução.
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: TunerScreen(controller: controller),
     );
   }

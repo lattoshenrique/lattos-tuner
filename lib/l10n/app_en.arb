@@ -1,0 +1,96 @@
+{
+  "@@locale": "en",
+  "appTitle": "Lattos Tuner",
+  "tunerTitle": "LATTOS TUNER",
+  "calibrationTooltip": "Calibration (A4 = {hz} Hz)",
+  "@calibrationTooltip": {
+    "description": "Tooltip of the calibration button in the app bar",
+    "placeholders": {
+      "hz": {
+        "type": "int"
+      }
+    }
+  },
+  "presetsTooltip": "Tuning presets",
+  "statusMicPaused": "Microphone paused",
+  "statusListening": "Play a string…",
+  "statusTooLow": "Too low — tighten the string",
+  "statusSlightlyLow": "Almost there — tighten slightly",
+  "statusInTune": "In tune!",
+  "statusSlightlyHigh": "Almost there — loosen slightly",
+  "statusTooHigh": "Too high — loosen the string",
+  "instrumentTuned": "Instrument in tune! 🤘",
+  "modeStrings": "Strings",
+  "modeChromatic": "Chromatic",
+  "captureTitle": "Tuning capture",
+  "captureClear": "Clear",
+  "captureHint": "Tune each string freely — when a note settles, it lands here. Play from the lowest string to the highest, then save it as a preset.",
+  "captureSave": "Save as preset",
+  "hzUnit": "Hz",
+  "centsUnit": "cents",
+  "permissionTitle": "No microphone access",
+  "permissionBody": "To tune your instrument, Lattos Tuner needs to hear the strings. Grant microphone permission in your device settings.",
+  "permissionRetry": "Try again",
+  "calibrationTitle": "Reference calibration",
+  "calibrationSubtitle": "A4 frequency (default: 440 Hz)",
+  "calibrationRestore": "Restore 440 Hz",
+  "presetsTitle": "Tunings",
+  "sectionMyPresets": "My presets",
+  "sectionBuiltIn": "Standard tunings",
+  "filterAll": "All",
+  "newPreset": "New preset",
+  "emptyCustom": "Create your first preset with the tuning you use — duplicate a standard tuning or capture your instrument's tuning in the tuner's chromatic mode.",
+  "emptyCustomFiltered": "No presets of yours for this instrument yet — create one with the button below or capture a tuning in the tuner's chromatic mode.",
+  "menuEdit": "Edit",
+  "menuDuplicate": "Duplicate",
+  "menuDuplicateEdit": "Duplicate & edit",
+  "menuDelete": "Delete",
+  "deleteDialogTitle": "Delete preset?",
+  "deleteDialogBody": "\"{name}\" will be permanently removed.",
+  "@deleteDialogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "editorTitleNew": "New preset",
+  "editorTitleEdit": "Edit preset",
+  "save": "Save",
+  "presetNameLabel": "Preset name",
+  "presetNameHint": "e.g. My Drop B tuning",
+  "sectionInstrument": "Instrument",
+  "sectionStrings": "Strings — lowest to highest",
+  "addString": "Add string",
+  "semitoneDown": "Half step down",
+  "semitoneUp": "Half step up",
+  "removeString": "Remove string",
+  "errorPresetName": "Give the preset a name.",
+  "errorPresetStrings": "Add at least one string.",
+  "copyName": "{name} (copy)",
+  "@copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "instrumentGuitar": "Guitar",
+  "instrumentBass": "Bass",
+  "instrumentUkulele": "Ukulele",
+  "instrumentCavaquinho": "Cavaquinho",
+  "instrumentOther": "Other",
+  "presetStandardGuitar": "Standard (E A D G B E)",
+  "presetSoad": "SOAD – Drop C",
+  "presetDropD": "Drop D",
+  "presetHalfStepDown": "Half step down (Eb)",
+  "presetDropCSharp": "Drop C#",
+  "presetDadgad": "DADGAD",
+  "presetOpenG": "Open G",
+  "presetBassStandard": "Bass – Standard (E A D G)",
+  "presetBass5": "Bass – 5 strings",
+  "presetUkulele": "Ukulele – Standard (G C E A)",
+  "presetCavaquinho": "Cavaquinho (D G B D)"
+}

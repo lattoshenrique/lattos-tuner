@@ -4,6 +4,7 @@ import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
 import 'package:lattos_tuner/views/screens/presets_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
@@ -168,15 +169,15 @@ class _TunerScreenState extends State<TunerScreen>
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: const Text('LATTOS TUNER'),
+            title: Text(context.l10n.tunerTitle),
             actions: [
               IconButton(
-                tooltip: 'Calibração (A4 = ${controller.a4.round()} Hz)',
+                tooltip: context.l10n.calibrationTooltip(controller.a4.round()),
                 icon: const Icon(Icons.tune_rounded),
                 onPressed: _openCalibration,
               ),
               IconButton(
-                tooltip: 'Presets de afinação',
+                tooltip: context.l10n.presetsTooltip,
                 icon: const Icon(Icons.library_music_rounded),
                 onPressed: _openPresets,
               ),
@@ -291,16 +292,18 @@ class _TunerScreenState extends State<TunerScreen>
                             _entranceSlot(
                               6,
                               SegmentedButton<bool>(
-                                segments: const [
+                                segments: [
                                   ButtonSegment(
                                     value: false,
-                                    label: Text('Cordas'),
-                                    icon: Icon(Icons.linear_scale_rounded),
+                                    label: Text(context.l10n.modeStrings),
+                                    icon: const Icon(
+                                      Icons.linear_scale_rounded,
+                                    ),
                                   ),
                                   ButtonSegment(
                                     value: true,
-                                    label: Text('Cromático'),
-                                    icon: Icon(Icons.piano_rounded),
+                                    label: Text(context.l10n.modeChromatic),
+                                    icon: const Icon(Icons.piano_rounded),
                                   ),
                                 ],
                                 selected: {chromatic},
@@ -370,10 +373,10 @@ class _CapturePanel extends StatelessWidget {
                 color: AppColors.coral,
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'CAPTURA DE AFINAÇÃO',
-                  style: TextStyle(
+                  context.l10n.captureTitle.toUpperCase(),
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.4,
@@ -388,17 +391,15 @@ class _CapturePanel extends StatelessWidget {
                     foregroundColor: AppColors.textSecondary,
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text('Limpar'),
+                  child: Text(context.l10n.captureClear),
                 ),
             ],
           ),
           const SizedBox(height: 8),
           if (midis.isEmpty)
-            const Text(
-              'Afine cada corda livremente — quando uma nota estabiliza, '
-              'ela entra aqui. Toque da corda mais grave para a mais aguda '
-              'e depois salve como preset.',
-              style: TextStyle(
+            Text(
+              context.l10n.captureHint,
+              style: const TextStyle(
                 fontSize: 12.5,
                 height: 1.45,
                 color: AppColors.textSecondary,
@@ -451,9 +452,9 @@ class _CapturePanel extends StatelessWidget {
                   foregroundColor: const Color(0xFF04291C),
                 ),
                 icon: const Icon(Icons.bookmark_add_rounded, size: 20),
-                label: const Text(
-                  'Salvar como preset',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                label: Text(
+                  context.l10n.captureSave,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
             ),
@@ -532,7 +533,7 @@ class _PresetCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      preset.name,
+                      preset.displayName(context.l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -544,8 +545,8 @@ class _PresetCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       allTuned
-                          ? 'Instrumento afinado! 🤘'
-                          : '${preset.instrument.label} · '
+                          ? context.l10n.instrumentTuned
+                          : '${preset.instrument.label(context.l10n)} · '
                                 '${preset.notes.join(' ')}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -576,8 +577,13 @@ class _ReadoutRow extends StatelessWidget {
 
   final TunerReading? reading;
 
-  String _format(double value, String suffix, {bool sign = false}) {
-    final text = value.abs().toStringAsFixed(1).replaceAll('.', ',');
+  String _format(
+    double value,
+    String suffix,
+    Locale locale, {
+    bool sign = false,
+  }) {
+    final text = formatDecimal(value.abs(), locale);
     final prefix = sign ? (value < 0 ? '−' : '+') : '';
     return '$prefix$text $suffix';
   }
@@ -590,6 +596,9 @@ class _ReadoutRow extends StatelessWidget {
       fontWeight: FontWeight.w600,
       fontFeatures: [FontFeature.tabularFigures()],
     );
+    final locale = Localizations.localeOf(context);
+    final hz = context.l10n.hzUnit;
+    final cents = context.l10n.centsUnit;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
       opacity: reading == null ? 0.0 : 1.0,
@@ -597,7 +606,7 @@ class _ReadoutRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            reading == null ? '— Hz' : _format(reading!.frequency, 'Hz'),
+            reading == null ? '— $hz' : _format(reading!.frequency, hz, locale),
             style: style,
           ),
           Container(
@@ -611,8 +620,8 @@ class _ReadoutRow extends StatelessWidget {
           ),
           Text(
             reading == null
-                ? '— cents'
-                : _format(reading!.cents, 'cents', sign: true),
+                ? '— $cents'
+                : _format(reading!.cents, cents, locale, sign: true),
             style: style,
           ),
         ],
@@ -627,16 +636,16 @@ class _StatusPill extends StatelessWidget {
   final TunerController controller;
   final Color accent;
 
-  String get _text {
-    if (!controller.isRunning) return 'Microfone pausado';
+  String _text(AppLocalizations l10n) {
+    if (!controller.isRunning) return l10n.statusMicPaused;
     final status = controller.reading?.status;
     return switch (status) {
-      null => 'Toque uma corda…',
-      TuningStatus.tooLow => 'Muito baixo — aperte a corda',
-      TuningStatus.slightlyLow => 'Quase lá — aperte de leve',
-      TuningStatus.inTune => 'Afinado!',
-      TuningStatus.slightlyHigh => 'Quase lá — solte de leve',
-      TuningStatus.tooHigh => 'Muito alto — solte a corda',
+      null => l10n.statusListening,
+      TuningStatus.tooLow => l10n.statusTooLow,
+      TuningStatus.slightlyLow => l10n.statusSlightlyLow,
+      TuningStatus.inTune => l10n.statusInTune,
+      TuningStatus.slightlyHigh => l10n.statusSlightlyHigh,
+      TuningStatus.tooHigh => l10n.statusTooHigh,
     };
   }
 
@@ -691,7 +700,7 @@ class _StatusPill extends StatelessWidget {
           ),
         ),
         child: Row(
-          key: ValueKey(_text),
+          key: ValueKey(_text(context.l10n)),
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
@@ -701,7 +710,7 @@ class _StatusPill extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              _text,
+              _text(context.l10n),
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -742,27 +751,28 @@ class _PermissionDeniedView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Sem acesso ao microfone',
-              style: TextStyle(
+            Text(
+              context.l10n.permissionTitle,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Para afinar seu instrumento, o Lattos Tuner precisa ouvir '
-              'o som das cordas. Conceda a permissão de microfone nas '
-              'configurações do aparelho.',
+            Text(
+              context.l10n.permissionBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Tentar novamente'),
+              label: Text(context.l10n.permissionRetry),
             ),
           ],
         ),
@@ -800,18 +810,21 @@ class _CalibrationSheetState extends State<_CalibrationSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Calibração da referência',
-              style: TextStyle(
+            Text(
+              context.l10n.calibrationTitle,
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Frequência do A4 (padrão: 440 Hz)',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            Text(
+              context.l10n.calibrationSubtitle,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 16),
             AnimatedSwitcher(
@@ -819,7 +832,7 @@ class _CalibrationSheetState extends State<_CalibrationSheet> {
               transitionBuilder: (child, animation) =>
                   ScaleTransition(scale: animation, child: child),
               child: Text(
-                '${_value.round()} Hz',
+                '${_value.round()} ${context.l10n.hzUnit}',
                 key: ValueKey(_value.round()),
                 style: const TextStyle(
                   fontSize: 34,
@@ -849,7 +862,7 @@ class _CalibrationSheetState extends State<_CalibrationSheet> {
                 widget.controller.setA4(440);
               },
               icon: const Icon(Icons.restart_alt_rounded, size: 18),
-              label: const Text('Restaurar 440 Hz'),
+              label: Text(context.l10n.calibrationRestore),
             ),
           ],
         ),

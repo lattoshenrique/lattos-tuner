@@ -4,6 +4,7 @@ import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/theme.dart';
 import 'package:lattos_tuner/views/widgets/string_chips.dart'
     show noteFrequencyLabel;
@@ -33,9 +34,12 @@ class PresetEditorScreen extends StatefulWidget {
 }
 
 class _PresetEditorScreenState extends State<PresetEditorScreen> {
-  late final TextEditingController _nameController;
+  late final TextEditingController _nameController = TextEditingController(
+    text: widget.existing?.name ?? '',
+  );
   late Instrument _instrument;
   late List<int> _midiNotes;
+  bool _namePrefilled = false;
 
   bool get _isEditing => widget.existing != null;
 
@@ -43,16 +47,26 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
   void initState() {
     super.initState();
     final source = widget.existing ?? widget.base;
-    final baseName = widget.base?.name ?? '';
-    _nameController = TextEditingController(
-      text:
-          widget.existing?.name ??
-          (baseName.isEmpty ? '' : '$baseName (cópia)'),
-    );
     _instrument = source?.instrument ?? Instrument.guitar;
     _midiNotes = (source?.notes ?? const ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'])
         .map((n) => nameToMidi(n) ?? 40)
         .toList();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // O nome sugerido para duplicatas ("… (cópia)") é localizado, então só
+    // pode ser montado quando o contexto de localização existe.
+    if (_namePrefilled) return;
+    _namePrefilled = true;
+    final base = widget.base;
+    if (widget.existing == null && base != null) {
+      final baseName = base.displayName(context.l10n);
+      if (baseName.isNotEmpty) {
+        _nameController.text = context.l10n.copyName(baseName);
+      }
+    }
   }
 
   @override
@@ -66,13 +80,13 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Dê um nome ao preset.')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.errorPresetName)));
       return;
     }
     if (_midiNotes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adicione pelo menos uma corda.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.errorPresetStrings)));
       return;
     }
     final preset = TuningPreset(
@@ -122,15 +136,19 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
         backgroundColor: AppColors.mint,
         foregroundColor: const Color(0xFF04291C),
         icon: const Icon(Icons.check_rounded),
-        label: const Text(
-          'Salvar',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        label: Text(
+          context.l10n.save,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: Text(_isEditing ? 'Editar preset' : 'Novo preset'),
+            title: Text(
+              _isEditing
+                  ? context.l10n.editorTitleEdit
+                  : context.l10n.editorTitleNew,
+            ),
             backgroundColor: AppColors.background,
           ),
           SliverPadding(
@@ -144,15 +162,15 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Nome do preset',
-                    hintText: 'ex.: Minha afinação Drop B',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.presetNameLabel,
+                    hintText: context.l10n.presetNameHint,
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'INSTRUMENTO',
-                  style: TextStyle(
+                Text(
+                  context.l10n.sectionInstrument.toUpperCase(),
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.4,
@@ -166,7 +184,7 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
                   children: [
                     for (final instrument in Instrument.values)
                       ChoiceChip(
-                        label: Text(instrument.label),
+                        label: Text(instrument.label(context.l10n)),
                         selected: _instrument == instrument,
                         showCheckmark: false,
                         selectedColor: AppColors.mint.withValues(alpha: 0.18),
@@ -190,9 +208,9 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'CORDAS — DA MAIS GRAVE PARA A MAIS AGUDA',
-                  style: TextStyle(
+                Text(
+                  context.l10n.sectionStrings.toUpperCase(),
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.4,
@@ -225,9 +243,9 @@ class _PresetEditorScreenState extends State<PresetEditorScreen> {
                     ),
                   ),
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text(
-                    'Adicionar corda',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                  label: Text(
+                    context.l10n.addString,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -300,7 +318,7 @@ class _StringRow extends StatelessWidget {
             const SizedBox(width: 12),
             IconButton(
               onPressed: () => onShift(-1),
-              tooltip: 'Meio tom abaixo',
+              tooltip: context.l10n.semitoneDown,
               icon: const Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.textSecondary,
@@ -325,7 +343,12 @@ class _StringRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      noteFrequencyLabel(name, a4: a4),
+                      noteFrequencyLabel(
+                        name,
+                        a4: a4,
+                        locale: Localizations.localeOf(context),
+                        hzUnit: context.l10n.hzUnit,
+                      ),
                       style: const TextStyle(
                         fontSize: 11.5,
                         color: AppColors.textSecondary,
@@ -337,7 +360,7 @@ class _StringRow extends StatelessWidget {
             ),
             IconButton(
               onPressed: () => onShift(1),
-              tooltip: 'Meio tom acima',
+              tooltip: context.l10n.semitoneUp,
               icon: const Icon(
                 Icons.keyboard_arrow_up_rounded,
                 color: AppColors.textSecondary,
@@ -346,7 +369,7 @@ class _StringRow extends StatelessWidget {
             const SizedBox(width: 4),
             IconButton(
               onPressed: onRemove,
-              tooltip: 'Remover corda',
+              tooltip: context.l10n.removeString,
               icon: Icon(
                 Icons.close_rounded,
                 size: 20,
