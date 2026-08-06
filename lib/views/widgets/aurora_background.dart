@@ -34,10 +34,11 @@ class AuroraBackground extends StatefulWidget {
 
 class _AuroraBackgroundState extends State<AuroraBackground>
     with SingleTickerProviderStateMixin {
-  /// Envelopes lentos: sobe em ~0,2 s e desce em ~0,9 s. Rápido o bastante
-  /// para acompanhar a nota, lento o bastante para não piscar.
-  static const double _attack = 0.20;
-  static const double _release = 0.90;
+  /// Envelopes: sobe em ~0,12 s e desce em ~0,6 s. Rápido o bastante para a
+  /// nota "empurrar" o fundo de forma perceptível, lento o bastante para o
+  /// movimento continuar lendo como respiração, não como pisca-pisca.
+  static const double _attack = 0.12;
+  static const double _release = 0.60;
 
   late final _AuroraState _visuals = _AuroraState(accent: widget.accent);
   late final Ticker _ticker;
@@ -106,12 +107,12 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     }
 
     // Ataque de nota (palhetada): salto de energia entre dois quadros vira um
-    // empurrão que se dissolve em ~1,5 s.
-    if (level - _previousLevel > 0.06) {
-      visuals.swell = math.min(1, visuals.swell + (level - _previousLevel) * 3);
+    // empurrão que se dissolve em ~1,1 s.
+    if (level - _previousLevel > 0.05) {
+      visuals.swell = math.min(1, visuals.swell + (level - _previousLevel) * 5);
     }
     _previousLevel = level;
-    visuals.swell = _towards(visuals.swell, 0, dt, 1.5, 1.5);
+    visuals.swell = _towards(visuals.swell, 0, dt, 1.1, 1.1);
 
     visuals.drift += dt;
     visuals.accent = Color.lerp(
@@ -166,13 +167,17 @@ class _AuroraState extends ChangeNotifier {
   Color accent;
   Color pitchColor;
 
-  /// Energia média de um trecho de bandas (graves, médias ou agudas).
-  double bandRange(int start, int count) {
-    var sum = 0.0;
+  /// Energia da banda mais forte do trecho (graves, médias ou agudas).
+  ///
+  /// Pico e não média: a energia de uma nota se concentra na fundamental e em
+  /// poucos harmônicos, então a média de oito bandas diluía justamente o que
+  /// deveria mover o fundo.
+  double bandPeak(int start, int count) {
+    var peak = 0.0;
     for (var i = start; i < start + count && i < bands.length; i++) {
-      sum += bands[i];
+      if (bands[i] > peak) peak = bands[i];
     }
-    return sum / count;
+    return peak;
   }
 
   void repaint() => notifyListeners();
@@ -187,9 +192,9 @@ class _AuroraPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final width = size.width;
     final height = size.height;
-    final bass = visuals.bandRange(0, 8);
-    final mid = visuals.bandRange(8, 8);
-    final treble = visuals.bandRange(16, 8);
+    final bass = visuals.bandPeak(0, 8);
+    final mid = visuals.bandPeak(8, 8);
+    final treble = visuals.bandPeak(16, 8);
     final level = visuals.level;
     final swell = visuals.swell;
 
@@ -198,7 +203,7 @@ class _AuroraPainter extends CustomPainter {
     final glow = Color.lerp(
       visuals.accent,
       visuals.pitchColor,
-      0.40 * visuals.clarity,
+      0.55 * visuals.clarity,
     )!;
 
     // Duas fases lentas e incomensuráveis: o conjunto nunca repete o mesmo
@@ -210,35 +215,35 @@ class _AuroraPainter extends CustomPainter {
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 80);
 
     // Mancha principal (graves): a que mais respira com o corpo da nota.
-    paint.color = glow.withValues(alpha: 0.10 + 0.07 * bass + 0.04 * swell);
+    paint.color = glow.withValues(alpha: 0.11 + 0.17 * bass + 0.09 * swell);
     canvas.drawCircle(
       Offset(
-        width * (0.30 + 0.15 * math.sin(slow) - 0.03 * swell),
-        height * (0.17 + 0.05 * math.cos(slower * 1.3) - 0.02 * bass),
+        width * (0.30 + 0.15 * math.sin(slow) - 0.06 * swell),
+        height * (0.17 + 0.05 * math.cos(slower * 1.3) - 0.05 * bass),
       ),
-      width * (0.42 + 0.05 * bass + 0.04 * swell),
+      width * (0.42 + 0.12 * bass + 0.08 * swell),
       paint,
     );
 
     // Mancha violeta (médios), do lado oposto.
-    paint.color = AppColors.violet.withValues(alpha: 0.08 + 0.05 * mid);
+    paint.color = AppColors.violet.withValues(alpha: 0.09 + 0.14 * mid);
     canvas.drawCircle(
       Offset(
-        width * (0.78 - 0.13 * math.cos(slow * 0.7) + 0.03 * swell),
+        width * (0.78 - 0.13 * math.cos(slow * 0.7) + 0.06 * swell),
         height * (0.30 + 0.07 * math.sin(slower)),
       ),
-      width * (0.36 + 0.05 * mid),
+      width * (0.36 + 0.11 * mid),
       paint,
     );
 
     // Base larga (agudos e volume geral): sustenta o gradiente embaixo.
-    paint.color = glow.withValues(alpha: 0.05 + 0.05 * treble + 0.03 * level);
+    paint.color = glow.withValues(alpha: 0.06 + 0.12 * treble + 0.07 * level);
     canvas.drawCircle(
       Offset(
         width * (0.5 + 0.18 * math.sin(slower * 0.6 + 1.7)),
-        height * (0.80 + 0.03 * math.cos(slow * 0.9)),
+        height * (0.80 + 0.03 * math.cos(slow * 0.9) - 0.04 * level),
       ),
-      width * (0.48 + 0.04 * treble),
+      width * (0.48 + 0.10 * treble),
       paint,
     );
 
@@ -248,15 +253,73 @@ class _AuroraPainter extends CustomPainter {
       final octaves = (math.exp(visuals.logFrequency) / 55).clamp(1.0, 64.0);
       final position = (math.log(octaves) / math.ln2 / 5).clamp(0.0, 1.0);
       paint.color = glow.withValues(
-        alpha: (0.05 + 0.07 * level) * visuals.clarity,
+        alpha: (0.09 + 0.16 * level) * visuals.clarity,
       );
       canvas.drawCircle(
         Offset(
           width * (0.5 + 0.06 * math.sin(slow * 1.4)),
           height * (0.72 - 0.45 * position),
         ),
-        width * (0.26 + 0.06 * level + 0.05 * swell),
+        width * (0.26 + 0.11 * level + 0.09 * swell),
         paint,
+      );
+    }
+
+    _paintBottomShadow(canvas, width, height);
+  }
+
+  /// Sombra do rodapé com a borda ondulando devagar.
+  ///
+  /// Não são linhas desenhadas: é a própria penumbra que sobe e desce em
+  /// camadas de maré, cada uma com fase e velocidade próprias, para o pé da
+  /// tela nunca ficar com um corte estático. No silêncio a maré é mais alta;
+  /// com som ela recua e cede espaço ao que reage à nota.
+  void _paintBottomShadow(Canvas canvas, double width, double height) {
+    final idle = (1 - visuals.level * 1.6).clamp(0.0, 1.0);
+    const layers = <(double, double, double, double)>[
+      // (altura relativa da crista, ciclos, velocidade, opacidade)
+      (0.76, 1.10, 0.13, 0.45),
+      (0.85, 1.70, -0.09, 0.65),
+      (0.93, 0.80, 0.06, 0.9),
+    ];
+    const steps = 40;
+    for (var layer = 0; layer < layers.length; layer++) {
+      final (base, cycles, speed, weight) = layers[layer];
+      final phase = visuals.drift * speed * 2 * math.pi + layer * 1.9;
+      final amplitude = height * (0.012 + 0.010 * idle) * (1 - layer * 0.2);
+      final crest = height * base - height * 0.02 * idle;
+      final path = Path()..moveTo(0, crest);
+      for (var step = 0; step <= steps; step++) {
+        final t = step / steps;
+        path.lineTo(
+          width * t,
+          crest +
+              math.sin(t * cycles * 2 * math.pi + phase) * amplitude +
+              // Segunda harmônica lenta: a crista nunca repete o mesmo perfil.
+              math.sin(t * cycles * 4 * math.pi - phase * 0.6) *
+                  amplitude *
+                  0.35,
+        );
+      }
+      path
+        ..lineTo(width, height)
+        ..lineTo(0, height)
+        ..close();
+      canvas.drawPath(
+        path,
+        Paint()
+          ..shader =
+              LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.background.withValues(alpha: 0),
+                  AppColors.background.withValues(alpha: 0.85 * weight),
+                ],
+              ).createShader(
+                Rect.fromLTRB(0, crest - amplitude * 2, width, height),
+              )
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 16),
       );
     }
   }

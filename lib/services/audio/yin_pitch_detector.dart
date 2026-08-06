@@ -7,14 +7,22 @@ import 'package:lattos_tuner/models/pitch_estimate.dart';
 /// (de Cheveigné & Kawahara, 2002).
 ///
 /// Opera sobre janelas de [bufferSize] amostras mono normalizadas em
-/// [-1, 1]. O maior período detectável é `bufferSize / 2` amostras, ou seja,
-/// a menor frequência detectável é `2 * sampleRate / bufferSize`.
+/// [-1, 1]. O maior período analisado é o menor entre `bufferSize / 2` e o
+/// período de [minFrequency] — a busca não desce abaixo dessa nota.
 class YinPitchDetector {
   YinPitchDetector({
     required this.sampleRate,
     this.bufferSize = 4096,
     this.threshold = 0.12,
+    this.minFrequency = 25.0,
   }) : _halfSize = bufferSize ~/ 2,
+       // O laço da diferença é O(tau_max × bufferSize/2) e domina o custo do
+       // afinador; limitar tau ao período da nota mais grave que interessa
+       // corta mais da metade do trabalho por janela.
+       _maxTau = math.min(
+         bufferSize ~/ 2,
+         (sampleRate / minFrequency).ceil() + 2,
+       ),
        _cmnd = Float64List(bufferSize ~/ 2);
 
   final double sampleRate;
@@ -24,7 +32,11 @@ class YinPitchDetector {
   /// indicam periodicidade mais forte.
   final double threshold;
 
+  /// Frequência mais grave procurada; define o maior período analisado.
+  final double minFrequency;
+
   final int _halfSize;
+  final int _maxTau;
 
   /// Função de diferença média cumulativa normalizada (reutilizada entre
   /// chamadas para evitar alocações).
@@ -55,12 +67,12 @@ class YinPitchDetector {
   /// condições de margem absoluta e relativa não disparam.
   int _octaveGuard(int tau) {
     final doubled = 2 * tau;
-    if (doubled >= _halfSize - 1) return tau;
+    if (doubled >= _maxTau - 1) return tau;
     // Mínimo local em torno de 2·tau.
     final radius = math.max(2, tau ~/ 8);
     var best = doubled;
     final start = math.max(1, doubled - radius);
-    final end = math.min(_halfSize - 1, doubled + radius);
+    final end = math.min(_maxTau - 1, doubled + radius);
     for (var t = start; t <= end; t++) {
       if (_cmnd[t] < _cmnd[best]) best = t;
     }
@@ -74,7 +86,7 @@ class YinPitchDetector {
   void _cumulativeMeanNormalizedDifference(Float64List x) {
     _cmnd[0] = 1.0;
     var runningSum = 0.0;
-    for (var tau = 1; tau < _halfSize; tau++) {
+    for (var tau = 1; tau < _maxTau; tau++) {
       var difference = 0.0;
       for (var i = 0; i < _halfSize; i++) {
         final delta = x[i] - x[i + tau];
@@ -86,10 +98,10 @@ class YinPitchDetector {
   }
 
   int _absoluteThreshold() {
-    for (var tau = 2; tau < _halfSize; tau++) {
+    for (var tau = 2; tau < _maxTau; tau++) {
       if (_cmnd[tau] < threshold) {
         // Desce até o mínimo local para não superestimar a frequência.
-        while (tau + 1 < _halfSize && _cmnd[tau + 1] < _cmnd[tau]) {
+        while (tau + 1 < _maxTau && _cmnd[tau + 1] < _cmnd[tau]) {
           tau++;
         }
         return tau;
@@ -99,7 +111,7 @@ class YinPitchDetector {
   }
 
   double _parabolicInterpolation(int tau) {
-    if (tau <= 0 || tau >= _halfSize - 1) return tau.toDouble();
+    if (tau <= 0 || tau >= _maxTau - 1) return tau.toDouble();
     final s0 = _cmnd[tau - 1];
     final s1 = _cmnd[tau];
     final s2 = _cmnd[tau + 1];

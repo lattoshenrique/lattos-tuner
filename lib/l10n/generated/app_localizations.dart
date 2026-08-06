@@ -205,7 +205,7 @@ abstract class AppLocalizations {
   /// No description provided for @modeChromatic.
   ///
   /// In en, this message translates to:
-  /// **'Chromatic'**
+  /// **'Free'**
   String get modeChromatic;
 
   /// No description provided for @captureTitle.
@@ -303,6 +303,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply'**
   String get calibrationApply;
+
+  /// No description provided for @hapticGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide vibration'**
+  String get hapticGuideTitle;
+
+  /// No description provided for @hapticGuideHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrates faster as the string gets closer, and confirms when it lands.'**
+  String get hapticGuideHint;
 
   /// No description provided for @presetsTitle.
   ///

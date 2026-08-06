@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/views/l10n.dart' show formatDecimal;
 import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/liquid_glass.dart';
 
 /// Fileira de "pílulas" com as cordas do preset ativo.
 ///
@@ -71,11 +72,6 @@ class _StringChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final highlight = isTarget || isLocked;
-    final borderColor = isLocked
-        ? accentColor
-        : isTarget
-        ? accentColor.withValues(alpha: 0.7)
-        : AppColors.outline;
     final noteColor = highlight
         ? accentColor
         : isTuned
@@ -84,13 +80,8 @@ class _StringChip extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isLocked
-            ? accentColor.withValues(alpha: 0.16)
-            : AppColors.surfaceBright,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: highlight ? 1.6 : 1.0),
         boxShadow: [
           if (highlight)
             BoxShadow(
@@ -100,9 +91,15 @@ class _StringChip extends StatelessWidget {
             ),
         ],
       ),
-      child: InkWell(
+      child: LiquidGlass(
+        radius: 16,
+        blur: 18,
+        rim: 8,
+        brightness: highlight ? 1.3 : 1,
+        tint: highlight ? accentColor : (isTuned ? AppColors.mint : null),
+        tintOpacity: highlight ? 0.22 : 0.10,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

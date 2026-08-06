@@ -53,7 +53,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get modeStrings => 'Cordes';
 
   @override
-  String get modeChromatic => 'Chromatique';
+  String get modeChromatic => 'Libre';
 
   @override
   String get captureTitle => 'Capture d\'accordage';
@@ -105,6 +105,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get calibrationApply => 'Appliquer';
+
+  @override
+  String get hapticGuideTitle => 'Vibration guide';
+
+  @override
+  String get hapticGuideHint =>
+      'Vibre plus vite à mesure que la corde approche et confirme quand elle est juste.';
 
   @override
   String get presetsTitle => 'Accordages';

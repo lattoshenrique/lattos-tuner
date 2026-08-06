@@ -68,7 +68,7 @@ void main() {
       lookupAppLocalizations(const Locale('de')).statusInTune,
       'Gestimmt!',
     );
-    expect(lookupAppLocalizations(const Locale('ja')).modeChromatic, 'クロマチック');
+    expect(lookupAppLocalizations(const Locale('ja')).modeChromatic, 'フリー');
   });
 
   test('presets embutidos têm nome localizado em todos os idiomas', () {

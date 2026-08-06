@@ -5,6 +5,7 @@ import 'package:lattos_tuner/models/tuning_preset.dart';
 import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/liquid_glass.dart';
 
 /// Lista de afinações: embutidas e criadas pelo usuário.
 class PresetsScreen extends StatefulWidget {
@@ -127,109 +128,111 @@ class _PresetsScreenState extends State<PresetsScreen>
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar.large(
-                title: Text(context.l10n.presetsTitle),
-                backgroundColor: AppColors.background,
-              ),
-              SliverToBoxAdapter(
-                child: _staggered(
-                  itemIndex++,
-                  _InstrumentFilterBar(
-                    selected: _filter,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _filter = value);
-                    },
-                  ),
+          body: BackdropGroup(
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar.large(
+                  title: Text(context.l10n.presetsTitle),
+                  backgroundColor: AppColors.background,
                 ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                sliver: SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: _staggered(
                     itemIndex++,
-                    _SectionHeader(context.l10n.sectionMyPresets),
+                    _InstrumentFilterBar(
+                      selected: _filter,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _filter = value);
+                      },
+                    ),
                   ),
                 ),
-              ),
-              if (custom.isEmpty)
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                   sliver: SliverToBoxAdapter(
                     child: _staggered(
                       itemIndex++,
-                      _EmptyCustomCard(filtered: _filter != null),
+                      _SectionHeader(context.l10n.sectionMyPresets),
                     ),
                   ),
                 ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList.builder(
-                  itemCount: custom.length,
-                  itemBuilder: (context, i) => _staggered(
-                    itemIndex + i,
-                    _PresetTile(
-                      preset: custom[i],
-                      isActive: controller.activePreset.id == custom[i].id,
-                      onTap: () => _select(custom[i]),
-                      menu: [
-                        _MenuAction(
-                          context.l10n.menuEdit,
-                          Icons.edit_rounded,
-                          () => _openEditor(existing: custom[i]),
-                        ),
-                        _MenuAction(
-                          context.l10n.menuDuplicate,
-                          Icons.copy_rounded,
-                          () => _openEditor(base: custom[i]),
-                        ),
-                        _MenuAction(
-                          context.l10n.menuDelete,
-                          Icons.delete_rounded,
-                          () => _confirmDelete(custom[i]),
-                          destructive: true,
-                        ),
-                      ],
+                if (custom.isEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverToBoxAdapter(
+                      child: _staggered(
+                        itemIndex++,
+                        _EmptyCustomCard(filtered: _filter != null),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                sliver: SliverToBoxAdapter(
-                  child: _staggered(
-                    itemIndex + custom.length,
-                    _SectionHeader(context.l10n.sectionBuiltIn),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
-                sliver: SliverList.builder(
-                  itemCount: builtIns.length,
-                  itemBuilder: (context, i) {
-                    final preset = builtIns[i];
-                    return _staggered(
-                      itemIndex + custom.length + 1 + i,
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList.builder(
+                    itemCount: custom.length,
+                    itemBuilder: (context, i) => _staggered(
+                      itemIndex + i,
                       _PresetTile(
-                        preset: preset,
-                        isActive: controller.activePreset.id == preset.id,
-                        onTap: () => _select(preset),
+                        preset: custom[i],
+                        isActive: controller.activePreset.id == custom[i].id,
+                        onTap: () => _select(custom[i]),
                         menu: [
                           _MenuAction(
-                            context.l10n.menuDuplicateEdit,
+                            context.l10n.menuEdit,
+                            Icons.edit_rounded,
+                            () => _openEditor(existing: custom[i]),
+                          ),
+                          _MenuAction(
+                            context.l10n.menuDuplicate,
                             Icons.copy_rounded,
-                            () => _openEditor(base: preset),
+                            () => _openEditor(base: custom[i]),
+                          ),
+                          _MenuAction(
+                            context.l10n.menuDelete,
+                            Icons.delete_rounded,
+                            () => _confirmDelete(custom[i]),
+                            destructive: true,
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: _staggered(
+                      itemIndex + custom.length,
+                      _SectionHeader(context.l10n.sectionBuiltIn),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
+                  sliver: SliverList.builder(
+                    itemCount: builtIns.length,
+                    itemBuilder: (context, i) {
+                      final preset = builtIns[i];
+                      return _staggered(
+                        itemIndex + custom.length + 1 + i,
+                        _PresetTile(
+                          preset: preset,
+                          isActive: controller.activePreset.id == preset.id,
+                          onTap: () => _select(preset),
+                          menu: [
+                            _MenuAction(
+                              context.l10n.menuDuplicateEdit,
+                              Icons.copy_rounded,
+                              () => _openEditor(base: preset),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -371,21 +374,10 @@ class _PresetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.mint.withValues(alpha: 0.08)
-            : AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: isActive
-              ? AppColors.mint.withValues(alpha: 0.6)
-              : AppColors.outline,
-          width: isActive ? 1.4 : 1.0,
-        ),
         boxShadow: [
           if (isActive)
             BoxShadow(
@@ -395,129 +387,125 @@ class _PresetTile extends StatelessWidget {
             ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
-            child: Row(
-              children: [
-                Hero(
-                  tag: 'preset-avatar-${preset.id}',
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(13),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isActive
-                              ? [AppColors.mint, const Color(0xFF19B380)]
-                              : [
-                                  AppColors.surfaceBright,
-                                  const Color(0xFF1D2A3D),
-                                ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${preset.notes.length}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 17,
-                            color: isActive
-                                ? const Color(0xFF04291C)
-                                : AppColors.textSecondary,
-                          ),
-                        ),
+      child: LiquidGlass(
+        radius: 22,
+        blur: 20,
+        rim: 10,
+        tint: isActive ? AppColors.mint : null,
+        tintOpacity: 0.14,
+        onTap: onTap,
+        padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+        child: Row(
+          children: [
+            Hero(
+              tag: 'preset-avatar-${preset.id}',
+              child: Material(
+                type: MaterialType.transparency,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(13),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isActive
+                          ? [AppColors.mint, const Color(0xFF19B380)]
+                          : [AppColors.surfaceBright, const Color(0xFF1D2A3D)],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${preset.notes.length}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                        color: isActive
+                            ? const Color(0xFF04291C)
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        preset.displayName(context.l10n),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${preset.instrument.label(context.l10n)} · '
-                        '${preset.notes.join(' ')}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutBack,
-                  scale: isActive ? 1.0 : 0.0,
-                  child: const Icon(
-                    Icons.check_circle_rounded,
-                    color: AppColors.mint,
-                    size: 22,
-                  ),
-                ),
-                PopupMenuButton<int>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: AppColors.textSecondary,
-                  ),
-                  color: AppColors.surfaceBright,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  itemBuilder: (context) => [
-                    for (var i = 0; i < menu.length; i++)
-                      PopupMenuItem(
-                        value: i,
-                        child: Row(
-                          children: [
-                            Icon(
-                              menu[i].icon,
-                              size: 19,
-                              color: menu[i].destructive
-                                  ? AppColors.coral
-                                  : AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              menu[i].label,
-                              style: TextStyle(
-                                color: menu[i].destructive
-                                    ? AppColors.coral
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                  onSelected: (index) => menu[index].onSelected(),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    preset.displayName(context.l10n),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${preset.instrument.label(context.l10n)} · '
+                    '${preset.notes.join(' ')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedScale(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack,
+              scale: isActive ? 1.0 : 0.0,
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.mint,
+                size: 22,
+              ),
+            ),
+            PopupMenuButton<int>(
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: AppColors.textSecondary,
+              ),
+              color: AppColors.surfaceBright,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              itemBuilder: (context) => [
+                for (var i = 0; i < menu.length; i++)
+                  PopupMenuItem(
+                    value: i,
+                    child: Row(
+                      children: [
+                        Icon(
+                          menu[i].icon,
+                          size: 19,
+                          color: menu[i].destructive
+                              ? AppColors.coral
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          menu[i].label,
+                          style: TextStyle(
+                            color: menu[i].destructive
+                                ? AppColors.coral
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+              onSelected: (index) => menu[index].onSelected(),
+            ),
+          ],
         ),
       ),
     );

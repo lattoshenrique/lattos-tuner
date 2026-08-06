@@ -81,8 +81,8 @@ void main() {
     final loud = await brightness(tester);
     expect(
       loud,
-      greaterThan(quiet * 1.05),
-      reason: 'o fundo deveria reagir ao áudio',
+      greaterThan(quiet * 1.5),
+      reason: 'o fundo deveria reagir ao áudio de forma perceptível',
     );
 
     // Volta ao silêncio: o envelope desce sozinho.

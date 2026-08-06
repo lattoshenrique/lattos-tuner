@@ -53,7 +53,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get modeStrings => 'Cuerdas';
 
   @override
-  String get modeChromatic => 'Cromático';
+  String get modeChromatic => 'Libre';
 
   @override
   String get captureTitle => 'Captura de afinación';
@@ -105,6 +105,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get calibrationApply => 'Aplicar';
+
+  @override
+  String get hapticGuideTitle => 'Vibración guía';
+
+  @override
+  String get hapticGuideHint =>
+      'Vibra más rápido cuando la cuerda se acerca y confirma al afinar.';
 
   @override
   String get presetsTitle => 'Afinaciones';

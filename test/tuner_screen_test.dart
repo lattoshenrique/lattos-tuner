@@ -127,6 +127,8 @@ void main() {
     }
     await tester.pump(const Duration(seconds: 1));
 
+    // Modo livre: o topo (preset das cordas) sai de cena.
+    expect(find.textContaining('Standard'), findsNothing);
     expect(controller.capturedMidis, hasLength(3));
     expect(
       find.text(lookupAppLocalizations(const Locale('en')).captureSave),

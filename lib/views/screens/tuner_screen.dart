@@ -7,12 +7,15 @@ import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/models/note.dart';
 import 'package:lattos_tuner/models/tuner_reading.dart';
 import 'package:lattos_tuner/models/tuning_preset.dart';
+import 'package:lattos_tuner/services/haptic_guide.dart';
 import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/preset_editor_screen.dart';
 import 'package:lattos_tuner/views/screens/presets_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
 import 'package:lattos_tuner/views/widgets/aurora_background.dart';
+import 'package:lattos_tuner/views/widgets/brand_lockup.dart';
 import 'package:lattos_tuner/views/widgets/confetti_burst.dart';
+import 'package:lattos_tuner/views/widgets/liquid_glass.dart';
 import 'package:lattos_tuner/views/widgets/note_display.dart';
 import 'package:lattos_tuner/views/widgets/string_chips.dart';
 import 'package:lattos_tuner/views/widgets/tuner_gauge.dart';
@@ -37,7 +40,11 @@ class _TunerScreenState extends State<TunerScreen>
     duration: const Duration(milliseconds: 900),
   )..forward();
 
-  int _lastTunedCount = 0;
+  /// Guia tátil e o relógio monotônico que o alimenta.
+  final HapticGuide _haptics = HapticGuide();
+  final Stopwatch _clock = Stopwatch()..start();
+  Timer? _hapticTimer;
+
   int _lastCapturedCount = 0;
   bool _celebrated = false;
   int _celebrationCount = 0;
@@ -60,6 +67,12 @@ class _TunerScreenState extends State<TunerScreen>
     WidgetsBinding.instance.addObserver(this);
     controller.addListener(_onControllerChange);
     _setWakelock(true);
+    // 40 ms é bem mais fino que o pulso mais rápido do guia (110 ms), então o
+    // ritmo sai regular sem depender da chegada das leituras.
+    _hapticTimer = Timer.periodic(
+      const Duration(milliseconds: 40),
+      (_) => _pulseHaptics(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => controller.start());
   }
 
@@ -68,8 +81,37 @@ class _TunerScreenState extends State<TunerScreen>
     _setWakelock(false);
     WidgetsBinding.instance.removeObserver(this);
     controller.removeListener(_onControllerChange);
+    _hapticTimer?.cancel();
     _entrance.dispose();
     super.dispose();
+  }
+
+  /// Vibração que guia a afinação: forte e espaçada longe da nota, leve e
+  /// rápida perto dela, com um toque de confirmação ao chegar.
+  void _pulseHaptics() {
+    final pulse = _haptics.evaluate(
+      reading: controller.reading,
+      running: controller.isRunning,
+      enabled: controller.hapticGuide,
+      now: _clock.elapsed,
+    );
+    switch (pulse) {
+      case null:
+        return;
+      case HapticPulse.light:
+        HapticFeedback.selectionClick();
+      case HapticPulse.medium:
+        HapticFeedback.lightImpact();
+      case HapticPulse.heavy:
+        HapticFeedback.mediumImpact();
+      case HapticPulse.arrival:
+        HapticFeedback.heavyImpact();
+        // Toque duplo: o segundo bate logo depois e marca a chegada.
+        Future.delayed(
+          const Duration(milliseconds: 90),
+          HapticFeedback.lightImpact,
+        );
+    }
   }
 
   @override
@@ -85,12 +127,8 @@ class _TunerScreenState extends State<TunerScreen>
   }
 
   void _onControllerChange() {
-    final tunedCount = controller.tunedStrings.length;
-    if (tunedCount > _lastTunedCount) {
-      HapticFeedback.mediumImpact();
-    }
-    _lastTunedCount = tunedCount;
-
+    // A chegada na nota já é anunciada pelo guia tátil, antes mesmo de a
+    // corda ser confirmada — repetir aqui viraria vibração dupla.
     final capturedCount = controller.capturedMidis.length;
     if (capturedCount > _lastCapturedCount) {
       HapticFeedback.mediumImpact();
@@ -180,185 +218,211 @@ class _TunerScreenState extends State<TunerScreen>
         final accent = statusColor(status);
         final chromatic = controller.mode == TargetMode.chromatic;
         return Scaffold(
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 700),
-                curve: Curves.easeOut,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.6),
-                    radius: 1.3,
-                    colors: [
-                      accent.withValues(alpha: 0.14),
-                      AppColors.background,
-                    ],
+          // Uma única captura do fundo serve todas as peças de vidro.
+          body: BackdropGroup(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeOut,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.6),
+                      radius: 1.3,
+                      colors: [
+                        accent.withValues(alpha: 0.14),
+                        AppColors.background,
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              AuroraBackground(accent: accent, audio: controller.audioFrame),
-              SafeArea(
-                child: controller.permissionDenied
-                    ? _PermissionDeniedView(onRetry: controller.start)
-                    : Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                        child: Column(
+                AuroraBackground(accent: accent, audio: controller.audioFrame),
+                SafeArea(
+                  child: controller.permissionDenied
+                      ? _PermissionDeniedView(onRetry: controller.start)
+                      : Column(
                           children: [
-                            _entranceSlot(
-                              0,
-                              _BrandBar(
-                                controller: controller,
-                                onCalibration: _openCalibration,
-                                onPresets: _openPresets,
+                            // O botão é uma peça de vidro: quem alinha com a
+                            // borda do card é a borda dele, na mesma margem
+                            // da tela.
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                              child: _entranceSlot(
+                                0,
+                                _BrandBar(
+                                  controller: controller,
+                                  onCalibration: _openCalibration,
+                                  onPresets: _openPresets,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 14),
-                            _entranceSlot(
-                              1,
-                              _PresetCard(
-                                controller: controller,
-                                onTap: _openPresets,
-                              ),
-                            ),
                             Expanded(
-                              // O bloco central tem tamanho natural fixo; em
-                              // telas curtas ele encolhe junto em vez de
-                              // estourar, e em telas largas o medidor para
-                              // de crescer. O padding garante respiro mínimo
-                              // entre ele, o preset e o painel de baixo.
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 18,
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  0,
+                                  20,
+                                  16,
                                 ),
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _entranceSlot(
-                                        2,
-                                        SizedBox(
-                                          width: 340,
-                                          child: TunerGauge(
-                                            cents: reading?.cents,
-                                            color: accent,
-                                            active: controller.isRunning,
-                                          ),
+                                child: Column(
+                                  children: [
+                                    // No modo livre o topo sai de cena: sem
+                                    // preset, sem cordas — só o afinador,
+                                    // pronto para qualquer nota.
+                                    ClipRect(
+                                      child: AnimatedSize(
+                                        duration: const Duration(
+                                          milliseconds: 320,
                                         ),
+                                        curve: Curves.easeOutCubic,
+                                        alignment: Alignment.topCenter,
+                                        child: chromatic
+                                            ? const SizedBox(
+                                                width: double.infinity,
+                                              )
+                                            : _entranceSlot(
+                                                1,
+                                                _PresetCard(
+                                                  controller: controller,
+                                                  onTap: _openPresets,
+                                                ),
+                                              ),
                                       ),
-                                      const SizedBox(height: 18),
-                                      _entranceSlot(
-                                        3,
-                                        NoteDisplay(
-                                          noteName: reading == null
-                                              ? null
-                                              : kNoteNames[reading.targetMidi %
-                                                    12],
-                                          octave: reading == null
-                                              ? null
-                                              : (reading.targetMidi ~/ 12) - 1,
-                                          color: accent,
-                                          inTune: status == TuningStatus.inTune,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _entranceSlot(
-                                        4,
-                                        _ReadoutRow(reading: reading),
-                                      ),
-                                      const SizedBox(height: 26),
-                                      _entranceSlot(
-                                        5,
-                                        _StatusPill(
-                                          controller: controller,
-                                          accent: accent,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            _entranceSlot(
-                              6,
-                              ClipRect(
-                                child: AnimatedSize(
-                                  duration: const Duration(milliseconds: 350),
-                                  curve: Curves.easeOutCubic,
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 250),
-                                    child: chromatic
-                                        ? _CapturePanel(
-                                            key: const ValueKey('capture'),
-                                            controller: controller,
-                                            onSave: _saveCapturedPreset,
-                                          )
-                                        : StringChips(
-                                            key: const ValueKey('strings'),
-                                            notes:
-                                                controller.activePreset.notes,
-                                            targetIndex: reading?.stringIndex,
-                                            lockedIndex:
-                                                controller.lockedStringIndex,
-                                            tunedIndices:
-                                                controller.tunedStrings,
-                                            accentColor: accent,
-                                            onTap: controller.toggleStringLock,
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 22),
-                            _entranceSlot(
-                              7,
-                              SegmentedButton<bool>(
-                                segments: [
-                                  ButtonSegment(
-                                    value: false,
-                                    label: Text(context.l10n.modeStrings),
-                                    icon: const Icon(
-                                      Icons.linear_scale_rounded,
                                     ),
-                                  ),
-                                  ButtonSegment(
-                                    value: true,
-                                    label: Text(context.l10n.modeChromatic),
-                                    icon: const Icon(Icons.piano_rounded),
-                                  ),
-                                ],
-                                selected: {chromatic},
-                                onSelectionChanged: (selection) {
-                                  HapticFeedback.selectionClick();
-                                  controller.setMode(
-                                    selection.first
-                                        ? TargetMode.chromatic
-                                        : TargetMode.auto,
-                                  );
-                                },
-                                style: SegmentedButton.styleFrom(
-                                  selectedBackgroundColor: accent.withValues(
-                                    alpha: 0.18,
-                                  ),
-                                  selectedForegroundColor: accent,
-                                  foregroundColor: AppColors.textSecondary,
-                                  side: const BorderSide(
-                                    color: AppColors.outline,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 14,
-                                  ),
+                                    Expanded(
+                                      // O bloco central tem tamanho natural fixo; em
+                                      // telas curtas ele encolhe junto em vez de
+                                      // estourar, e em telas largas o medidor para
+                                      // de crescer. O padding garante respiro mínimo
+                                      // entre ele, o preset e o painel de baixo.
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 18,
+                                        ),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              _entranceSlot(
+                                                2,
+                                                SizedBox(
+                                                  width: 340,
+                                                  child: TunerGauge(
+                                                    cents: reading?.cents,
+                                                    color: accent,
+                                                    active:
+                                                        controller.isRunning,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 18),
+                                              _entranceSlot(
+                                                3,
+                                                NoteDisplay(
+                                                  noteName: reading == null
+                                                      ? null
+                                                      : kNoteNames[reading
+                                                                .targetMidi %
+                                                            12],
+                                                  octave: reading == null
+                                                      ? null
+                                                      : (reading.targetMidi ~/
+                                                                12) -
+                                                            1,
+                                                  color: accent,
+                                                  inTune:
+                                                      status ==
+                                                      TuningStatus.inTune,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              _entranceSlot(
+                                                4,
+                                                _ReadoutRow(reading: reading),
+                                              ),
+                                              const SizedBox(height: 26),
+                                              _entranceSlot(
+                                                5,
+                                                _StatusPill(
+                                                  controller: controller,
+                                                  accent: accent,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    _entranceSlot(
+                                      6,
+                                      ClipRect(
+                                        child: AnimatedSize(
+                                          duration: const Duration(
+                                            milliseconds: 350,
+                                          ),
+                                          curve: Curves.easeOutCubic,
+                                          child: AnimatedSwitcher(
+                                            duration: const Duration(
+                                              milliseconds: 250,
+                                            ),
+                                            child: chromatic
+                                                ? _CapturePanel(
+                                                    key: const ValueKey(
+                                                      'capture',
+                                                    ),
+                                                    controller: controller,
+                                                    onSave: _saveCapturedPreset,
+                                                  )
+                                                : StringChips(
+                                                    key: const ValueKey(
+                                                      'strings',
+                                                    ),
+                                                    notes: controller
+                                                        .activePreset
+                                                        .notes,
+                                                    targetIndex:
+                                                        reading?.stringIndex,
+                                                    lockedIndex: controller
+                                                        .lockedStringIndex,
+                                                    tunedIndices:
+                                                        controller.tunedStrings,
+                                                    accentColor: accent,
+                                                    onTap: controller
+                                                        .toggleStringLock,
+                                                  ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 22),
+                                    _entranceSlot(
+                                      7,
+                                      _ModeSwitch(
+                                        chromatic: chromatic,
+                                        accent: accent,
+                                        onChanged: (value) {
+                                          HapticFeedback.selectionClick();
+                                          controller.setMode(
+                                            value
+                                                ? TargetMode.chromatic
+                                                : TargetMode.auto,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-              ),
-              ConfettiBurst(play: _celebrationCount),
-            ],
+                ),
+                ConfettiBurst(play: _celebrationCount),
+              ],
+            ),
           ),
         );
       },
@@ -383,39 +447,173 @@ class _BrandBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset('assets/branding/logo_mark.png', width: 28, height: 28),
-        const SizedBox(width: 9),
-        // scaleDown mantém o wordmark inteiro em telas estreitas ou com
-        // traduções mais longas.
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              context.l10n.tunerTitle,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.1,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
+        const Flexible(child: BrandLockup()),
         const Spacer(),
-        IconButton(
+        _BarAction(
           tooltip: context.l10n.calibrationTooltip(controller.a4.round()),
-          icon: const Icon(Icons.tune_rounded),
-          color: AppColors.textSecondary,
+          icon: Icons.tune_rounded,
           onPressed: onCalibration,
         ),
-        IconButton(
+        const SizedBox(width: 2),
+        _BarAction(
           tooltip: context.l10n.presetsTooltip,
-          icon: const Icon(Icons.library_music_rounded),
-          color: AppColors.textSecondary,
+          icon: Icons.library_music_rounded,
           onPressed: onPresets,
         ),
       ],
+    );
+  }
+}
+
+/// Seletor de modo: a pista e a seleção são peças de vidro, e a seleção
+/// desliza tingida com a cor do estado atual.
+class _ModeSwitch extends StatelessWidget {
+  const _ModeSwitch({
+    required this.chromatic,
+    required this.accent,
+    required this.onChanged,
+  });
+
+  final bool chromatic;
+  final Color accent;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const height = 52.0;
+    return SizedBox(
+      width: 300,
+      height: height,
+      child: LiquidGlass(
+        radius: 26,
+        blur: 20,
+        rim: 10,
+        brightness: 0.85,
+        padding: const EdgeInsets.all(4),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              alignment: chromatic
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: SizedBox(
+                width: 146,
+                height: height - 8,
+                child: LiquidGlass(
+                  radius: 22,
+                  blur: 14,
+                  rim: 9,
+                  brightness: 1.25,
+                  tint: accent,
+                  tintOpacity: 0.30,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModeOption(
+                    icon: Icons.linear_scale_rounded,
+                    label: context.l10n.modeStrings,
+                    selected: !chromatic,
+                    accent: accent,
+                    onTap: () => onChanged(false),
+                  ),
+                ),
+                Expanded(
+                  child: _ModeOption(
+                    icon: Icons.all_inclusive_rounded,
+                    label: context.l10n.modeChromatic,
+                    selected: chromatic,
+                    accent: accent,
+                    onTap: () => onChanged(true),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeOption extends StatelessWidget {
+  const _ModeOption({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? accent : AppColors.textSecondary;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 19, color: color),
+            const SizedBox(width: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 240),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: color,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Botão do cabeçalho: caixa quadrada fixa para os dois ícones ficarem do
+/// mesmo tamanho, alinhados entre si e com a mesma área de toque.
+class _BarAction extends StatelessWidget {
+  const _BarAction({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 44,
+      child: LiquidGlass(
+        radius: 22,
+        blur: 16,
+        rim: 8,
+        brightness: 0.8,
+        onTap: onPressed,
+        child: Tooltip(
+          message: tooltip,
+          child: Center(
+            child: Icon(icon, size: 21, color: AppColors.textSecondary),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -438,7 +636,7 @@ class _CapturePanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.8),
+        color: AppColors.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.outline),
       ),
@@ -556,98 +754,92 @@ class _PresetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final preset = controller.activePreset;
     final allTuned = controller.allStringsTuned;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Hero(
-                tag: 'preset-avatar-${preset.id}',
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: allTuned
-                            ? [AppColors.mint, const Color(0xFF19B380)]
-                            : [AppColors.violet, const Color(0xFF5C4DD6)],
-                      ),
-                    ),
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(scale: animation, child: child),
-                        child: allTuned
-                            ? const Icon(
-                                Icons.check_rounded,
-                                key: ValueKey('tuned'),
-                                color: Colors.white,
-                              )
-                            : Text(
-                                '${preset.notes.length}',
-                                key: const ValueKey('count'),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                ),
-                              ),
-                      ),
-                    ),
+    return LiquidGlass(
+      radius: 24,
+      blur: 20,
+      rim: 10,
+      tint: allTuned ? AppColors.mint : null,
+      tintOpacity: 0.10,
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Hero(
+            tag: 'preset-avatar-${preset.id}',
+            child: Material(
+              type: MaterialType.transparency,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: allTuned
+                        ? [AppColors.mint, const Color(0xFF19B380)]
+                        : [AppColors.violet, const Color(0xFF5C4DD6)],
+                  ),
+                ),
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: allTuned
+                        ? const Icon(
+                            Icons.check_rounded,
+                            key: ValueKey('tuned'),
+                            color: Colors.white,
+                          )
+                        : Text(
+                            '${preset.notes.length}',
+                            key: const ValueKey('count'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      preset.displayName(context.l10n),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      allTuned
-                          ? context.l10n.instrumentTuned
-                          : '${preset.instrument.label(context.l10n)} · '
-                                '${preset.notes.join(' ')}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: allTuned
-                            ? AppColors.mint
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.unfold_more_rounded,
-                color: AppColors.textSecondary,
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  preset.displayName(context.l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  allTuned
+                      ? context.l10n.instrumentTuned
+                      : '${preset.instrument.label(context.l10n)} · '
+                            '${preset.notes.join(' ')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: allTuned ? AppColors.mint : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.unfold_more_rounded, color: AppColors.textSecondary),
+        ],
       ),
     );
   }
@@ -750,19 +942,19 @@ class _StatusPill extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
       decoration: BoxDecoration(
         color: active
-            ? accent.withValues(alpha: 0.14)
-            : AppColors.surfaceBright,
+            ? accent.withValues(alpha: 0.12)
+            : AppColors.surface.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: active ? accent.withValues(alpha: 0.5) : AppColors.outline,
+          color: active ? accent.withValues(alpha: 0.45) : AppColors.outline,
         ),
         boxShadow: [
           if (inTune)
             BoxShadow(
-              color: accent.withValues(alpha: 0.4),
+              color: accent.withValues(alpha: 0.35),
               blurRadius: 26,
               spreadRadius: -4,
             ),
@@ -1059,6 +1251,38 @@ class _CalibrationSheetState extends State<_CalibrationSheet> {
               ),
             ),
             const SizedBox(height: 8),
+            const Divider(),
+            SwitchListTile.adaptive(
+              value: controller.hapticGuide,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                controller.setHapticGuide(value);
+                setState(() {});
+              },
+              contentPadding: EdgeInsets.zero,
+              activeThumbColor: AppColors.mint,
+              secondary: const Icon(
+                Icons.vibration_rounded,
+                size: 20,
+                color: AppColors.violet,
+              ),
+              title: Text(
+                context.l10n.hapticGuideTitle,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              subtitle: Text(
+                context.l10n.hapticGuideHint,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  height: 1.4,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
             const Divider(),
             const SizedBox(height: 12),
             Row(

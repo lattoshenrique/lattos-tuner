@@ -86,6 +86,7 @@ class TunerController extends ChangeNotifier {
   List<TuningPreset> _customPresets = [];
   late TuningPreset _activePreset;
   double _a4 = kDefaultA4;
+  bool _hapticGuide = true;
   TargetMode _mode = TargetMode.auto;
   int? _lockedStringIndex;
   TunerReading? _reading;
@@ -102,6 +103,9 @@ class TunerController extends ChangeNotifier {
   List<TuningPreset> get customPresets => List.unmodifiable(_customPresets);
   TuningPreset get activePreset => _activePreset;
   double get a4 => _a4;
+
+  /// Se o guia tátil deve vibrar durante a afinação.
+  bool get hapticGuide => _hapticGuide;
   TargetMode get mode => _mode;
   int? get lockedStringIndex => _lockedStringIndex;
   TunerReading? get reading => _reading;
@@ -120,6 +124,7 @@ class TunerController extends ChangeNotifier {
     if (_initialized) return;
     _initialized = true;
     _a4 = _repository.a4Reference;
+    _hapticGuide = _repository.hapticGuide;
     _customPresets = _repository.loadCustomPresets();
     final activeId = _repository.activePresetId;
     _activePreset =
@@ -198,6 +203,13 @@ class TunerController extends ChangeNotifier {
     _a4 = clamped.clamp(minA4, maxA4);
     await _repository.setA4Reference(_a4);
     _resetSession();
+    notifyListeners();
+  }
+
+  Future<void> setHapticGuide(bool enabled) async {
+    if (enabled == _hapticGuide) return;
+    _hapticGuide = enabled;
+    await _repository.setHapticGuide(enabled);
     notifyListeners();
   }
 

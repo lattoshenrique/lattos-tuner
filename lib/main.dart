@@ -6,6 +6,8 @@ import 'package:lattos_tuner/services/preset_repository.dart';
 import 'package:lattos_tuner/views/l10n.dart';
 import 'package:lattos_tuner/views/screens/tuner_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
+import 'package:lattos_tuner/views/widgets/brand_intro.dart';
+import 'package:lattos_tuner/views/widgets/liquid_glass.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
@@ -21,6 +23,7 @@ Future<void> main() async {
       systemNavigationBarColor: AppColors.background,
     ),
   );
+  await LiquidGlassShader.load();
   final prefs = await SharedPreferences.getInstance();
   final controller = TunerController(
     repository: PresetRepository(prefs),
@@ -45,7 +48,14 @@ class LattosTunerApp extends StatelessWidget {
       // aparelho; inglês é o fallback quando não há tradução.
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: TunerScreen(controller: controller),
+      // A abertura da marca fica por cima do afinador, que já monta e começa
+      // a ouvir por baixo — nada de atraso para quem só quer afinar.
+      home: Stack(
+        children: [
+          TunerScreen(controller: controller),
+          const BrandIntro(),
+        ],
+      ),
     );
   }
 }

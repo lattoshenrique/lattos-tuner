@@ -53,7 +53,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modeStrings => 'الأوتار';
 
   @override
-  String get modeChromatic => 'كروماتيكي';
+  String get modeChromatic => 'حر';
 
   @override
   String get captureTitle => 'التقاط الدوزان';
@@ -105,6 +105,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calibrationApply => 'تطبيق';
+
+  @override
+  String get hapticGuideTitle => 'اهتزاز إرشادي';
+
+  @override
+  String get hapticGuideHint =>
+      'يهتز أسرع كلما اقترب الوتر من النغمة، ويؤكد عند ضبطها.';
 
   @override
   String get presetsTitle => 'الدوزانات';

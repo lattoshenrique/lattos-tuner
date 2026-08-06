@@ -53,7 +53,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get modeStrings => 'तार';
 
   @override
-  String get modeChromatic => 'क्रोमैटिक';
+  String get modeChromatic => 'फ्री';
 
   @override
   String get captureTitle => 'ट्यूनिंग कैप्चर';
@@ -105,6 +105,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get calibrationApply => 'लागू करें';
+
+  @override
+  String get hapticGuideTitle => 'गाइड कंपन';
+
+  @override
+  String get hapticGuideHint =>
+      'तार जितना पास आता है कंपन उतना तेज़ होता है, और सही होने पर पुष्टि मिलती है।';
 
   @override
   String get presetsTitle => 'ट्यूनिंग';

@@ -53,7 +53,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get modeStrings => '弦';
 
   @override
-  String get modeChromatic => 'クロマチック';
+  String get modeChromatic => 'フリー';
 
   @override
   String get captureTitle => 'チューニングキャプチャ';
@@ -104,6 +104,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get calibrationApply => '適用';
+
+  @override
+  String get hapticGuideTitle => 'ガイド振動';
+
+  @override
+  String get hapticGuideHint => '音が近づくほど速く振動し、合ったときに確認の振動が返ります。';
 
   @override
   String get presetsTitle => 'チューニング';

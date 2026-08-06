@@ -47,6 +47,12 @@ class TunerAudioService implements PitchSource {
   /// Fator sobre o piso de ruído medido para aceitar uma leitura de pitch.
   static const double noiseGateFactor = 1.8;
 
+  /// Destaque do pico espectral que libera uma nota mesmo abaixo do gate de
+  /// energia. Cordas agudas carregam pouca energia e ficavam mudas depois de
+  /// um ruído (palhetada, mão na corda) levantar o piso — mas o pico da
+  /// fundamental continua nítido no espectro.
+  static const double tonalProminence = 10.0;
+
   /// Piso de ruído inicial, antes de qualquer medição.
   static const double initialNoiseFloor = 0.002;
 
@@ -61,6 +67,7 @@ class TunerAudioService implements PitchSource {
   final YinPitchDetector _detector = YinPitchDetector(
     sampleRate: analysisSampleRate.toDouble(),
     bufferSize: analysisBufferSize,
+    minFrequency: minFrequency,
   );
 
   final SpectrumAnalyzer _spectrum = SpectrumAnalyzer(
@@ -189,10 +196,18 @@ class TunerAudioService implements PitchSource {
     }
     final rms = math.sqrt(sumSquares / analysisBufferSize);
     if (rms < absoluteMinRms) {
-      _emitFrame(rms: rms, buffer: null, accepted: null);
+      // Silêncio também derruba o piso: sem isso um ruído passageiro deixava
+      // o gate alto para sempre, e as cordas agudas nunca mais passavam.
+      _noiseFloor = (_noiseFloor * 0.85 + rms * 0.15).clamp(
+        absoluteMinRms,
+        0.2,
+      );
+      _emitFrame(rms: rms, bands: null, accepted: null);
       _pitchController.add(null);
       return;
     }
+    // A FFT serve às duas pontas: decide o gate e alimenta a visualização.
+    final bands = _spectrum.analyze(buffer);
     final estimate = _detector.estimate(buffer);
     if (estimate == null ||
         estimate.frequency < minFrequency ||
@@ -201,26 +216,27 @@ class TunerAudioService implements PitchSource {
       // usado pelo gate adaptativo.
       _noiseFloor = (_noiseFloor * 0.9 + rms * 0.1).clamp(absoluteMinRms, 0.2);
       // Ruído ainda tem espectro: a visualização reage a ele, o afinador não.
-      _emitFrame(rms: rms, buffer: buffer, accepted: null);
+      _emitFrame(rms: rms, bands: bands, accepted: null);
       _pitchController.add(null);
       return;
     }
-    // Gate adaptativo: exige que o sinal periódico esteja acima do piso de
-    // ruído do ambiente, sem penalizar microfones pouco sensíveis.
-    if (rms < _noiseFloor * noiseGateFactor) {
-      _emitFrame(rms: rms, buffer: buffer, accepted: null);
+    // Gate adaptativo: o sinal periódico precisa estar acima do piso de ruído
+    // do ambiente — ou exibir um pico espectral inconfundível na fundamental,
+    // que é como uma corda aguda baixinha se distingue do chiado.
+    if (rms < _noiseFloor * noiseGateFactor &&
+        _spectrum.peakProminence(estimate.frequency) < tonalProminence) {
+      _emitFrame(rms: rms, bands: bands, accepted: null);
       _pitchController.add(null);
       return;
     }
-    _emitFrame(rms: rms, buffer: buffer, accepted: estimate);
+    _emitFrame(rms: rms, bands: bands, accepted: estimate);
     _pitchController.add(estimate);
   }
 
-  /// Publica o retrato visual da janela. Sem ouvintes, pula a FFT — a
-  /// visualização é a única consumidora e ela nem sempre está montada.
+  /// Publica o retrato visual da janela.
   void _emitFrame({
     required double rms,
-    required Float64List? buffer,
+    required Float64List? bands,
     required PitchEstimate? accepted,
   }) {
     if (!_audioController.hasListener) return;
@@ -229,9 +245,7 @@ class TunerAudioService implements PitchSource {
         level: _spectrum.levelFromRms(rms),
         frequency: accepted?.frequency,
         clarity: accepted?.probability ?? 0,
-        bands: buffer == null
-            ? Float64List(AudioFrame.bandCount)
-            : _spectrum.analyze(buffer),
+        bands: bands ?? Float64List(AudioFrame.bandCount),
       ),
     );
   }

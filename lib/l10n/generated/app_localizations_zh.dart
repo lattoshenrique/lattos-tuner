@@ -53,7 +53,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modeStrings => '琴弦';
 
   @override
-  String get modeChromatic => '半音';
+  String get modeChromatic => '自由';
 
   @override
   String get captureTitle => '调音捕捉';
@@ -102,6 +102,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get calibrationApply => '应用';
+
+  @override
+  String get hapticGuideTitle => '引导震动';
+
+  @override
+  String get hapticGuideHint => '越接近目标音，震动越快；调准时会有确认震动。';
 
   @override
   String get presetsTitle => '调音方案';

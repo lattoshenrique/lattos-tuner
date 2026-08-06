@@ -12,6 +12,7 @@ class PresetRepository {
   static const String customPresetsKey = 'custom_presets_v1';
   static const String activePresetKey = 'active_preset_id';
   static const String a4ReferenceKey = 'a4_reference';
+  static const String hapticGuideKey = 'haptic_guide_enabled';
 
   static const List<TuningPreset> builtInPresets = [
     TuningPreset(
@@ -190,4 +191,10 @@ class PresetRepository {
 
   Future<void> setA4Reference(double value) =>
       _prefs.setDouble(a4ReferenceKey, value);
+
+  /// Guia tátil ligado por padrão: é o que permite afinar sem olhar a tela.
+  bool get hapticGuide => _prefs.getBool(hapticGuideKey) ?? true;
+
+  Future<void> setHapticGuide(bool value) =>
+      _prefs.setBool(hapticGuideKey, value);
 }

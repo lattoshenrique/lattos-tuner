@@ -99,6 +99,30 @@ class SpectrumAnalyzer {
     return bands;
   }
 
+  /// Quantas vezes o pico espectral em torno de [frequency] se destaca da
+  /// magnitude média do espectro.
+  ///
+  /// Só é válido logo após [analyze] — lê o resultado da última FFT. Um tom
+  /// real, ainda que baixinho, concentra energia em poucos bins e passa fácil
+  /// de 10; ruído de banda larga espalha energia e fica perto de 3.
+  double peakProminence(double frequency) {
+    final half = fftSize ~/ 2;
+    final center = (frequency * fftSize / sampleRate).round();
+    if (center < 1 || center >= half) return 0;
+    var peak = 0.0;
+    var sum = 0.0;
+    for (var bin = 1; bin < half; bin++) {
+      final re = _real[bin];
+      final im = _imaginary[bin];
+      final magnitude = math.sqrt(re * re + im * im);
+      sum += magnitude;
+      // Vizinhança de 2 bins cobre o espalhamento da janela de Hann.
+      if ((bin - center).abs() <= 2 && magnitude > peak) peak = magnitude;
+    }
+    final mean = sum / (half - 1);
+    return mean <= 0 ? 0 : peak / mean;
+  }
+
   /// Converte um RMS de janela para a mesma escala perceptual das bandas.
   double levelFromRms(double rms) {
     final db = 20 * (math.log(rms + 1e-12) / math.ln10);

@@ -53,7 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modeStrings => 'Strings';
 
   @override
-  String get modeChromatic => 'Chromatic';
+  String get modeChromatic => 'Free';
 
   @override
   String get captureTitle => 'Tuning capture';
@@ -105,6 +105,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calibrationApply => 'Apply';
+
+  @override
+  String get hapticGuideTitle => 'Guide vibration';
+
+  @override
+  String get hapticGuideHint =>
+      'Vibrates faster as the string gets closer, and confirms when it lands.';
 
   @override
   String get presetsTitle => 'Tunings';

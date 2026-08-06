@@ -53,7 +53,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get modeStrings => '줄';
 
   @override
-  String get modeChromatic => '크로매틱';
+  String get modeChromatic => '자유';
 
   @override
   String get captureTitle => '튜닝 캡처';
@@ -105,6 +105,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get calibrationApply => '적용';
+
+  @override
+  String get hapticGuideTitle => '가이드 진동';
+
+  @override
+  String get hapticGuideHint => '음에 가까워질수록 빠르게 진동하고, 맞으면 확인 진동이 울립니다.';
 
   @override
   String get presetsTitle => '튜닝';

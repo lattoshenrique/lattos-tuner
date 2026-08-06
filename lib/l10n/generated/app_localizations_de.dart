@@ -53,7 +53,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get modeStrings => 'Saiten';
 
   @override
-  String get modeChromatic => 'Chromatisch';
+  String get modeChromatic => 'Frei';
 
   @override
   String get captureTitle => 'Stimmungs-Aufnahme';
@@ -105,6 +105,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get calibrationApply => 'Übernehmen';
+
+  @override
+  String get hapticGuideTitle => 'Führungsvibration';
+
+  @override
+  String get hapticGuideHint =>
+      'Vibriert schneller, je näher die Saite kommt, und bestätigt beim Treffer.';
 
   @override
   String get presetsTitle => 'Stimmungen';

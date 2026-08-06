@@ -1,6 +1,8 @@
 flutter_native_splash:
   color: "#060A12"
-  image: assets/branding/splash_logo.png
+  # Só o símbolo: o nome do app é montado em tela (BrandLockup/BrandIntro),
+  # nunca embutido em imagem.
+  image: assets/branding/logo_mark.png
   android_12:
     color: "#060A12"
     image: assets/branding/splash_android12.png

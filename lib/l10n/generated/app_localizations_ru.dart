@@ -53,7 +53,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get modeStrings => 'Струны';
 
   @override
-  String get modeChromatic => 'Хроматический';
+  String get modeChromatic => 'Свободный';
 
   @override
   String get captureTitle => 'Захват строя';
@@ -105,6 +105,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get calibrationApply => 'Применить';
+
+  @override
+  String get hapticGuideTitle => 'Вибрация-подсказка';
+
+  @override
+  String get hapticGuideHint =>
+      'Чем ближе к ноте, тем чаще вибрация; при попадании — подтверждение.';
 
   @override
   String get presetsTitle => 'Строи';
