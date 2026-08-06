@@ -39,7 +39,30 @@ class _TunerGaugeState extends State<TunerGauge>
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
-  )..repeat();
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _syncPulse();
+  }
+
+  @override
+  void didUpdateWidget(TunerGauge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncPulse();
+  }
+
+  /// A respiração das faixas só faz sentido com o ponteiro em cena: parada,
+  /// ela custaria um quadro a 60 fps para nada.
+  void _syncPulse() {
+    final live = widget.cents != null && widget.active;
+    if (live && !_pulse.isAnimating) {
+      _pulse.repeat();
+    } else if (!live && _pulse.isAnimating) {
+      _pulse.stop();
+    }
+  }
 
   @override
   void dispose() {
@@ -158,15 +181,26 @@ class _GaugePainter extends CustomPainter {
             ? color.withValues(alpha: 0.55 + 0.45 * liveness)
             : Colors.white.withValues(alpha: isMajor ? 0.28 : 0.14);
       if (lit) {
-        tick.maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.solid, 2.5);
+        // Um traço mais grosso e translúcido no lugar do desfoque por marca:
+        // mesmo brilho, sem 20 passes de blur por quadro.
+        canvas.drawLine(
+          inner,
+          outer,
+          Paint()
+            ..strokeWidth = (isMajor ? 3.4 : 2.2) + 3
+            ..strokeCap = StrokeCap.round
+            ..color = color.withValues(alpha: 0.22 * liveness),
+        );
       }
       canvas.drawLine(inner, outer, tick);
     }
 
     // Rótulos da escala.
-    _drawLabel(canvas, pivot, radius + 20, _angleForCents(-50), '♭');
+    // "b" e "#" em vez de ♭/♯: a Poppins não tem os símbolos musicais, e o
+    // fallback do sistema varia de aparelho para aparelho.
+    _drawLabel(canvas, pivot, radius + 20, _angleForCents(-50), 'b');
     _drawLabel(canvas, pivot, radius + 20, _angleForCents(0), '0');
-    _drawLabel(canvas, pivot, radius + 20, _angleForCents(50), '♯');
+    _drawLabel(canvas, pivot, radius + 20, _angleForCents(50), '#');
 
     // Ponteiro com brilho.
     final needleAngle = _angleForCents(cents);

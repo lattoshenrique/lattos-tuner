@@ -4,6 +4,8 @@ import 'package:lattos_tuner/controllers/tuner_controller.dart';
 import 'package:lattos_tuner/services/audio/tuner_audio_service.dart';
 import 'package:lattos_tuner/services/preset_repository.dart';
 import 'package:lattos_tuner/views/l10n.dart';
+import 'package:lattos_tuner/models/tuner_reading.dart';
+import 'package:lattos_tuner/views/screens/presets_screen.dart';
 import 'package:lattos_tuner/views/screens/tuner_screen.dart';
 import 'package:lattos_tuner/views/theme.dart';
 import 'package:lattos_tuner/views/widgets/brand_intro.dart';
@@ -33,14 +35,59 @@ Future<void> main() async {
   runApp(LattosTunerApp(controller: controller));
 }
 
-class LattosTunerApp extends StatelessWidget {
+/// Roteiro temporário para as capturas das lojas: percorre as telas sozinho
+/// e força o idioma. Só liga com --dart-define=SHOTS=true.
+const _shots = bool.fromEnvironment('SHOTS');
+
+class LattosTunerApp extends StatefulWidget {
   const LattosTunerApp({super.key, required this.controller});
 
   final TunerController controller;
 
   @override
+  State<LattosTunerApp> createState() => _LattosTunerAppState();
+}
+
+class _LattosTunerAppState extends State<LattosTunerApp> {
+  final GlobalKey<NavigatorState> _navigator = GlobalKey<NavigatorState>();
+
+  TunerController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_shots) _runScript();
+  }
+
+  Future<void> _runScript() async {
+    await Future<void>.delayed(const Duration(seconds: 12));
+    controller.setMode(TargetMode.chromatic);
+    await Future<void>.delayed(const Duration(seconds: 6));
+    _navigator.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => PresetsScreen(controller: controller),
+      ),
+    );
+    await Future<void>.delayed(const Duration(seconds: 5));
+    _navigator.currentState?.pop();
+    await Future<void>.delayed(const Duration(seconds: 1));
+    final context = _navigator.currentContext;
+    if (context == null || !context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => CalibrationSheet(controller: controller),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigator,
+      locale: _shots ? const Locale('en') : null,
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),

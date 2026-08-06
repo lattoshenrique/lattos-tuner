@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:lattos_tuner/views/theme.dart';
 
 /// Carrega e serve o shader de refração das peças de vidro.
 ///
@@ -15,7 +16,9 @@ abstract final class LiquidGlassShader {
   static Future<void> load() async {
     if (_program != null || _unavailable) return;
     try {
-      _program = await ui.FragmentProgram.fromAsset('shaders/liquid_glass.frag');
+      _program = await ui.FragmentProgram.fromAsset(
+        'shaders/liquid_glass.frag',
+      );
     } catch (error) {
       _unavailable = true;
       debugPrint('Liquid glass sem shader de refração: $error');
@@ -79,6 +82,7 @@ class LiquidGlass extends StatefulWidget {
     this.tintOpacity = 0.12,
     this.brightness = 1,
     this.onTap,
+    this.refract = true,
   });
 
   final Widget child;
@@ -104,6 +108,13 @@ class LiquidGlass extends StatefulWidget {
   final double brightness;
 
   final VoidCallback? onTap;
+
+  /// Peça pesada (captura o fundo, borra e refrata) ou leve (só o véu e os
+  /// brilhos). Cada peça pesada custa uma captura do fundo por quadro, então
+  /// as pequenas — chips, botões de ícone, o polegar do seletor — usam a
+  /// versão leve: sobre um fundo já escuro a diferença é mínima e o ganho de
+  /// desempenho é grande.
+  final bool refract;
 
   @override
   State<LiquidGlass> createState() => _LiquidGlassState();
@@ -149,15 +160,17 @@ class _LiquidGlassState extends State<LiquidGlass>
     final rim = widget.rim;
     final shape = BorderRadius.circular(radius);
     final content = Padding(padding: widget.padding, child: widget.child);
-    final refraction = LiquidGlassShader.filter(
-      radius: radius,
-      rim: rim,
-      strength: rim * 0.9,
-      chroma: 0.4,
-      edgeSaturation: 0.9,
-      edgeGain: 0.5,
-      bodySaturation: 1.18,
-    );
+    final refraction = widget.refract
+        ? LiquidGlassShader.filter(
+            radius: radius,
+            rim: rim,
+            strength: rim * 0.9,
+            chroma: 0.4,
+            edgeSaturation: 0.9,
+            edgeGain: 0.5,
+            bodySaturation: 1.18,
+          )
+        : null;
     final blurFilter = ui.ImageFilter.blur(
       sigmaX: widget.blur,
       sigmaY: widget.blur,
@@ -166,32 +179,38 @@ class _LiquidGlassState extends State<LiquidGlass>
       borderRadius: shape,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: BackdropFilter(
-              // BackdropFilter comum, e não .grouped: o modo agrupado ignora
-              // filtros de shader, e é o shader que faz a refração.
-              // Sem shader (Skia), o vidro cai para desfoque + saturação.
-              filter: refraction == null
-                  ? ui.ImageFilter.compose(
-                      outer: _lightCollector,
-                      inner: blurFilter,
-                    )
-                  // Borra primeiro, entorta a borda depois.
-                  : ui.ImageFilter.compose(
-                      outer: refraction,
-                      inner: blurFilter,
-                    ),
-              child: const SizedBox.expand(),
+          if (!widget.refract)
+            // Peça leve: um véu do tom do fundo no lugar da captura.
+            Positioned.fill(
+              child: ColoredBox(
+                color: AppColors.surfaceBright.withValues(alpha: 0.34),
+              ),
+            )
+          else
+            Positioned.fill(
+              child: BackdropFilter(
+                // BackdropFilter comum, e não .grouped: o modo agrupado ignora
+                // filtros de shader, e é o shader que faz a refração.
+                // Sem shader (Skia), o vidro cai para desfoque + saturação.
+                filter: refraction == null
+                    ? ui.ImageFilter.compose(
+                        outer: _lightCollector,
+                        inner: blurFilter,
+                      )
+                    // Borra primeiro, entorta a borda depois.
+                    : ui.ImageFilter.compose(
+                        outer: refraction,
+                        inner: blurFilter,
+                      ),
+                child: const SizedBox.expand(),
+              ),
             ),
-          ),
           Positioned.fill(
             child: TweenAnimationBuilder<Color?>(
               // Troca de tinta também é transição, não corte seco. Sem tinta
               // o alvo é transparente — e transparente vira "sem tinta" no
               // painter, para não pintar um véu preto.
-              tween: ColorTween(
-                end: widget.tint ?? const Color(0x00FFFFFF),
-              ),
+              tween: ColorTween(end: widget.tint ?? const Color(0x00FFFFFF)),
               duration: const Duration(milliseconds: 280),
               builder: (context, tint, _) => AnimatedBuilder(
                 animation: _shine,
@@ -202,6 +221,7 @@ class _LiquidGlassState extends State<LiquidGlass>
                     tintOpacity: widget.tintOpacity,
                     brightness: widget.brightness,
                     shine: Curves.easeOutCubic.transform(_shine.value),
+                    heavy: widget.refract,
                   ),
                 ),
               ),
@@ -233,6 +253,7 @@ class _GlassPainter extends CustomPainter {
     required this.tintOpacity,
     required this.brightness,
     required this.shine,
+    required this.heavy,
   });
 
   final double radius;
@@ -242,6 +263,9 @@ class _GlassPainter extends CustomPainter {
 
   /// 0 = luz ainda entrando, 1 = assentada.
   final double shine;
+
+  /// Peça pesada paga desfoque na sombra interna; a leve usa gradiente.
+  final bool heavy;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -285,15 +309,31 @@ class _GlassPainter extends CustomPainter {
     canvas.clipRRect(rrect);
 
     // Sombra interna na base: o vidro tem espessura, e a luz que entra por
-    // cima não chega embaixo.
-    canvas.drawRRect(
-      rrect.shift(const Offset(0, 12)),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 16
-        ..color = Colors.black.withValues(alpha: 0.20)
-        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 10),
-    );
+    // cima não chega embaixo. Nas peças leves ela é um gradiente, para não
+    // pagar um passe de desfoque por peça em cada quadro.
+    if (heavy) {
+      canvas.drawRRect(
+        rrect.shift(const Offset(0, 12)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 16
+          ..color = Colors.black.withValues(alpha: 0.20)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 10),
+      );
+    } else {
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.center,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0),
+              Colors.black.withValues(alpha: 0.22),
+            ],
+          ).createShader(bounds),
+      );
+    }
 
     // Especular: um risco de luz que ENTRA correndo a peça e assenta na quina
     // de cima. É a varredura que faz o vidro parecer reagir à luz.
@@ -348,5 +388,6 @@ class _GlassPainter extends CustomPainter {
       oldDelegate.tint != tint ||
       oldDelegate.tintOpacity != tintOpacity ||
       oldDelegate.brightness != brightness ||
-      oldDelegate.shine != shine;
+      oldDelegate.shine != shine ||
+      oldDelegate.heavy != heavy;
 }

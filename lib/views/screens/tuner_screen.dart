@@ -181,7 +181,7 @@ class _TunerScreenState extends State<TunerScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (_) => _CalibrationSheet(controller: controller),
+      builder: (_) => CalibrationSheet(controller: controller),
     );
   }
 
@@ -488,6 +488,7 @@ class _ModeSwitch extends StatelessWidget {
         radius: 26,
         blur: 20,
         rim: 10,
+        refract: false,
         brightness: 0.85,
         padding: const EdgeInsets.all(4),
         child: Stack(
@@ -505,6 +506,7 @@ class _ModeSwitch extends StatelessWidget {
                   radius: 22,
                   blur: 14,
                   rim: 9,
+                  refract: false,
                   brightness: 1.25,
                   tint: accent,
                   tintOpacity: 0.30,
@@ -571,6 +573,9 @@ class _ModeOption extends StatelessWidget {
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 240),
               style: TextStyle(
+                // AnimatedDefaultTextStyle substitui o estilo herdado, então
+                // sem a família explícita o rótulo saía na fonte do sistema.
+                fontFamily: 'Poppins',
                 fontSize: 15,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 color: color,
@@ -605,6 +610,7 @@ class _BarAction extends StatelessWidget {
         radius: 22,
         blur: 16,
         rim: 8,
+        refract: false,
         brightness: 0.8,
         onTap: onPressed,
         child: Tooltip(
@@ -1054,16 +1060,17 @@ class _PermissionDeniedView extends StatelessWidget {
   }
 }
 
-class _CalibrationSheet extends StatefulWidget {
-  const _CalibrationSheet({required this.controller});
+/// Ajustes de referência (A4) e do guia tátil, exibidos numa folha.
+class CalibrationSheet extends StatefulWidget {
+  const CalibrationSheet({super.key, required this.controller});
 
   final TunerController controller;
 
   @override
-  State<_CalibrationSheet> createState() => _CalibrationSheetState();
+  State<CalibrationSheet> createState() => _CalibrationSheetState();
 }
 
-class _CalibrationSheetState extends State<_CalibrationSheet> {
+class _CalibrationSheetState extends State<CalibrationSheet> {
   /// Janela de desvios (em cents) medidos no modo "calibrar ouvindo".
   static const int _listenWindow = 8;
 

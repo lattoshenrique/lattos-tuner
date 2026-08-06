@@ -49,6 +49,7 @@ class _AuroraBackgroundState extends State<AuroraBackground>
   /// e sobe devagar, então o fundo reage ao que MUDA, não ao chiado constante.
   double _noiseFloor = 0.35;
   double _previousLevel = 0;
+  double _sinceRepaint = 0;
 
   @override
   void initState() {
@@ -94,7 +95,13 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     visuals.clarity = _towards(visuals.clarity, frame.clarity, dt, 0.3, 0.9);
     for (var i = 0; i < visuals.bands.length; i++) {
       final band = i < frame.bands.length ? aboveFloor(frame.bands[i]) : 0.0;
-      visuals.bands[i] = _towards(visuals.bands[i], band, dt, _attack, _release);
+      visuals.bands[i] = _towards(
+        visuals.bands[i],
+        band,
+        dt,
+        _attack,
+        _release,
+      );
     }
 
     final frequency = frame.frequency;
@@ -121,7 +128,13 @@ class _AuroraBackgroundState extends State<AuroraBackground>
       (dt * 2.5).clamp(0.0, 1.0),
     )!;
 
-    visuals.repaint();
+    // Repinta a ~30 fps: são derivas lentas e envelopes, e cada repintura do
+    // fundo obriga todas as peças de vidro acima a refazerem a captura.
+    _sinceRepaint += dt;
+    if (_sinceRepaint >= 0.032) {
+      _sinceRepaint = 0;
+      visuals.repaint();
+    }
   }
 
   /// Cor associada à classe da nota: cada semitom gira 30° no círculo de
@@ -151,9 +164,7 @@ class _AuroraBackgroundState extends State<AuroraBackground>
 /// Estado suavizado compartilhado com o painter. Vive fora do ciclo de build:
 /// o ticker atualiza os campos e chama [repaint], sem reconstruir widget algum.
 class _AuroraState extends ChangeNotifier {
-  _AuroraState({required Color accent})
-    : accent = accent,
-      pitchColor = accent;
+  _AuroraState({required Color accent}) : accent = accent, pitchColor = accent;
 
   final Float64List bands = Float64List(AudioFrame.bandCount);
 
@@ -211,40 +222,40 @@ class _AuroraPainter extends CustomPainter {
     final slow = 2 * math.pi * (visuals.drift / 26);
     final slower = 2 * math.pi * (visuals.drift / 41);
 
-    final paint = Paint()
-      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 80);
-
     // Mancha principal (graves): a que mais respira com o corpo da nota.
-    paint.color = glow.withValues(alpha: 0.11 + 0.17 * bass + 0.09 * swell);
-    canvas.drawCircle(
+    _blob(
+      canvas,
       Offset(
         width * (0.30 + 0.15 * math.sin(slow) - 0.06 * swell),
         height * (0.17 + 0.05 * math.cos(slower * 1.3) - 0.05 * bass),
       ),
       width * (0.42 + 0.12 * bass + 0.08 * swell),
-      paint,
+      glow,
+      0.11 + 0.17 * bass + 0.09 * swell,
     );
 
     // Mancha violeta (médios), do lado oposto.
-    paint.color = AppColors.violet.withValues(alpha: 0.09 + 0.14 * mid);
-    canvas.drawCircle(
+    _blob(
+      canvas,
       Offset(
         width * (0.78 - 0.13 * math.cos(slow * 0.7) + 0.06 * swell),
         height * (0.30 + 0.07 * math.sin(slower)),
       ),
       width * (0.36 + 0.11 * mid),
-      paint,
+      AppColors.violet,
+      0.09 + 0.14 * mid,
     );
 
     // Base larga (agudos e volume geral): sustenta o gradiente embaixo.
-    paint.color = glow.withValues(alpha: 0.06 + 0.12 * treble + 0.07 * level);
-    canvas.drawCircle(
+    _blob(
+      canvas,
       Offset(
         width * (0.5 + 0.18 * math.sin(slower * 0.6 + 1.7)),
         height * (0.80 + 0.03 * math.cos(slow * 0.9) - 0.04 * level),
       ),
       width * (0.48 + 0.10 * treble),
-      paint,
+      glow,
+      0.06 + 0.12 * treble + 0.07 * level,
     );
 
     // Brilho da nota: sobe e desce conforme a fundamental — grave embaixo,
@@ -252,20 +263,39 @@ class _AuroraPainter extends CustomPainter {
     if (visuals.clarity > 0.01) {
       final octaves = (math.exp(visuals.logFrequency) / 55).clamp(1.0, 64.0);
       final position = (math.log(octaves) / math.ln2 / 5).clamp(0.0, 1.0);
-      paint.color = glow.withValues(
-        alpha: (0.09 + 0.16 * level) * visuals.clarity,
-      );
-      canvas.drawCircle(
+      _blob(
+        canvas,
         Offset(
           width * (0.5 + 0.06 * math.sin(slow * 1.4)),
           height * (0.72 - 0.45 * position),
         ),
         width * (0.26 + 0.11 * level + 0.09 * swell),
-        paint,
+        glow,
+        (0.09 + 0.16 * level) * visuals.clarity,
       );
     }
 
     _paintBottomShadow(canvas, width, height);
+  }
+
+  /// Mancha de luz difusa: círculo com desfoque, que no Impeller tem caminho
+  /// rápido para formas simples (medido: bem mais barato que um gradiente
+  /// radial grande, que gera overdraw em tela cheia).
+  void _blob(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Color color,
+    double alpha,
+  ) {
+    if (alpha <= 0.004) return;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = color.withValues(alpha: alpha)
+        ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 60),
+    );
   }
 
   /// Sombra do rodapé com a borda ondulando devagar.
@@ -308,18 +338,18 @@ class _AuroraPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..shader =
-              LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.background.withValues(alpha: 0),
-                  AppColors.background.withValues(alpha: 0.85 * weight),
-                ],
-              ).createShader(
-                Rect.fromLTRB(0, crest - amplitude * 2, width, height),
-              )
-          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 16),
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.background.withValues(alpha: 0),
+              AppColors.background.withValues(alpha: 0.85 * weight),
+            ],
+          ).createShader(Rect.fromLTRB(0, crest - amplitude * 2, width, height))
+          // Sem esse desfoque a crista do caminho vira um corte seco na
+          // sombra. É barato: sigma pequeno em três caminhos, nada perto dos
+          // sigmas grandes das manchas.
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 12),
       );
     }
   }

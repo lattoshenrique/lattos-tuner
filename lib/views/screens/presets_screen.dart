@@ -391,6 +391,7 @@ class _PresetTile extends StatelessWidget {
         radius: 22,
         blur: 20,
         rim: 10,
+        refract: false,
         tint: isActive ? AppColors.mint : null,
         tintOpacity: 0.14,
         onTap: onTap,

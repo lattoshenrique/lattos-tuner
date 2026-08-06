@@ -95,6 +95,7 @@ class _StringChip extends StatelessWidget {
         radius: 16,
         blur: 18,
         rim: 8,
+        refract: false,
         brightness: highlight ? 1.3 : 1,
         tint: highlight ? accentColor : (isTuned ? AppColors.mint : null),
         tintOpacity: highlight ? 0.22 : 0.10,
