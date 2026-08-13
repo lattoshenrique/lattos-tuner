@@ -1,0 +1,43 @@
+.carteira-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 34px;
+  align-items: center;
+}
+.carteira-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-label {
+  color: var(--ink-3);
+}
+.hero-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.hero-fig {
+  font-size: clamp(38px, 5.6vw, 54px);
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.hero-row .delta {
+  margin-bottom: 8px;
+}
+.hero-sub {
+  color: var(--ink-2);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .carteira-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+}

@@ -1,0 +1,29 @@
+.chart-wrap {
+  margin-top: 10px;
+  /* o Recharts mede o pai; sem min-width ele trava em 0 dentro de grid/flex */
+  min-width: 0;
+}
+
+.chart-tt {
+  background: var(--tooltip-bg);
+  color: #f4f7f2;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 2px;
+}
+.chart-tt-date {
+  opacity: 0.65;
+}
+.chart-tt b {
+  font-weight: 600;
+}
+
+/* o Recharts põe um outline no wrapper ao focar — não queremos o retângulo */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}

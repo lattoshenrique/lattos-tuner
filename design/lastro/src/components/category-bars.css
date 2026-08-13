@@ -1,0 +1,51 @@
+.cats {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.cat {
+  display: grid;
+  grid-template-columns: 108px 1fr 92px 76px;
+  gap: 12px;
+  align-items: center;
+}
+.cat-name {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cat-track {
+  display: block;
+  height: 16px;
+  border-radius: 0 4px 4px 0;
+  background: var(--chart-1-dim);
+}
+.cat-bar {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: var(--chart-1);
+}
+.cat-val {
+  font-size: 13px;
+  text-align: right;
+}
+.cat-chg {
+  font-size: 12px;
+  text-align: right;
+}
+/* gasto que sobe é ruim, gasto que cai é bom — a cor segue o significado */
+.cat-chg.up {
+  color: var(--bad);
+}
+.cat-chg.down {
+  color: var(--good);
+}
+
+@media (max-width: 620px) {
+  .cat {
+    grid-template-columns: 84px 1fr 84px;
+  }
+  .cat-chg {
+    display: none;
+  }
+}

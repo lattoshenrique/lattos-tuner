@@ -1,0 +1,160 @@
+.deck {
+  position: relative;
+  height: 320px;
+  perspective: 1200px;
+  perspective-origin: 50% 45%;
+  touch-action: pan-y; /* deixa o scroll vertical passar; o horizontal é do cartão */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card {
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  width: min(370px, 84vw);
+  aspect-ratio: 8 / 5;
+  margin-left: calc(min(370px, 84vw) / -2);
+  margin-top: calc(min(370px, 84vw) * 5 / 8 / -2);
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  box-shadow: var(--shadow);
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: grab;
+  touch-action: none; /* o gesto no cartão é nosso */
+}
+.card:active {
+  cursor: grabbing;
+}
+
+.card-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.card-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(430px 300px at 34% 22%, rgba(255, 255, 255, 0.16), transparent 66%);
+  mix-blend-mode: soft-light;
+}
+
+.card-content {
+  position: absolute;
+  inset: 0;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.card .mono {
+  opacity: 0.75;
+}
+.card-nick {
+  display: block;
+  font-family: var(--serif);
+  font-size: 19px;
+  margin-top: 3px;
+}
+.card-chip {
+  width: 38px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.card-num {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  opacity: 0.85;
+}
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.card-bal-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.card-bal {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+}
+.card-mark {
+  display: flex;
+}
+.card-mark i {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0.8;
+}
+.card-mark i + i {
+  margin-left: -9px;
+}
+
+.deck-dots {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.deck-dots button {
+  width: 26px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.deck-dots button i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  opacity: 0.5;
+  transition: all 0.25s;
+}
+.deck-dots button[aria-selected='true'] i {
+  background: var(--accent);
+  opacity: 1;
+  width: 20px;
+  border-radius: 4px;
+}
+
+@media (max-width: 900px) {
+  .deck {
+    height: 285px;
+  }
+  .deck-dots button {
+    width: 34px;
+    height: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-dots button i {
+    transition: none;
+  }
+}

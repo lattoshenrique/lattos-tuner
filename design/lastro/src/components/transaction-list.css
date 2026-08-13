@@ -1,0 +1,47 @@
+.day-label {
+  margin: 0;
+  padding: 14px 2px 6px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+section:first-child > .day-label {
+  padding-top: 2px;
+}
+.tx {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 11px 2px;
+  border-top: 1px solid var(--hairline);
+}
+.tx-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+}
+.tx-main {
+  min-width: 0;
+  flex: 1;
+}
+.tx-name {
+  display: block;
+  font-size: 14px;
+}
+.tx-meta {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.tx-val {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tx-val.in {
+  color: var(--good);
+}

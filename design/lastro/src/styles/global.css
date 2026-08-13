@@ -1,0 +1,424 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.serif {
+  font-family: var(--serif);
+}
+.mono {
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- casca ---------- */
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px 56px;
+}
+
+/* ---------- topo ---------- */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 14px;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+}
+.brand h1 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.brand .mono {
+  color: var(--ink-3);
+}
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  width: 33px;
+  height: 33px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--accent), transparent 72%), var(--raised);
+  border: 1px solid var(--hairline-2);
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- navegação (abas no desktop) ---------- */
+.nav {
+  position: relative;
+  border-bottom: 1px solid var(--hairline);
+}
+.nav-scroll {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+.nav a {
+  position: relative;
+  padding: 11px 15px 13px;
+  white-space: nowrap;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  transition: color 0.2s;
+}
+.nav a[aria-current='page'] {
+  color: var(--ink);
+}
+.nav a:hover {
+  color: var(--ink-2);
+}
+.nav-ind {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  pointer-events: none;
+}
+
+/* ---------- palco das rotas ---------- */
+.stage {
+  position: relative;
+  perspective: 1500px;
+  perspective-origin: 50% 42%;
+  margin-top: 22px;
+}
+.page {
+  transform-style: preserve-3d;
+}
+.page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.page-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 20px;
+}
+.page-head .mono {
+  color: var(--ink-3);
+}
+
+/* ---------- peças ---------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 17px 19px;
+}
+.panel + .panel {
+  margin-top: 14px;
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.panel-head h3 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 400;
+  font-family: var(--serif);
+}
+.panel-head .mono {
+  color: var(--ink-3);
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline-2);
+  font-variant-numeric: tabular-nums;
+}
+.delta.up {
+  color: var(--good);
+}
+.delta.down {
+  color: var(--bad);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 13px;
+}
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.tile .mono {
+  color: var(--ink-3);
+}
+.tile-val {
+  display: block; /* o valor vem de um <span> animado — sem isto ele senta ao lado do rótulo */
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.tile-delta {
+  font-size: 12px;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.tile-delta.up {
+  color: var(--good);
+}
+.tile-delta.down {
+  color: var(--bad);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.actions button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  transition: border-color 0.18s, color 0.18s, transform 0.18s;
+}
+.actions button span {
+  font-size: 16px;
+  color: var(--accent);
+}
+.actions button:hover {
+  border-color: var(--hairline-2);
+  color: var(--ink);
+  transform: translateY(-2px);
+}
+
+/* ---------- rodapé de navegação (desktop) ---------- */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+.pager a,
+.pager span.disabled {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  color: var(--ink-2);
+  transition: border-color 0.18s, color 0.18s;
+}
+.pager a:hover {
+  border-color: var(--hairline-2);
+  color: var(--ink);
+}
+.pager span.disabled {
+  opacity: 0.35;
+}
+
+/* ---------- notas ---------- */
+.notes {
+  margin-top: 34px;
+  border-top: 1px solid var(--hairline);
+  padding-top: 24px;
+}
+.notes h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.notes > p {
+  color: var(--ink-2);
+  max-width: 62ch;
+  margin: 6px 0 16px;
+}
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: 13px;
+}
+.note {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.note b {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 13.5px;
+}
+.note code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--accent);
+}
+.fine {
+  margin-top: 30px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+/* ============================================================
+   Mobile: a barra de abas vai para baixo, ao alcance do polegar,
+   e cada rota é uma tela que rola verticalmente por conta própria.
+   ============================================================ */
+@media (max-width: 900px) {
+  .shell {
+    padding: 0 15px calc(74px + env(safe-area-inset-bottom));
+  }
+  .brand .mono {
+    display: none;
+  }
+  .top-right {
+    font-size: 12px;
+  }
+  .nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    border-bottom: 0;
+    border-top: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--ground) 92%, transparent);
+    backdrop-filter: blur(12px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-scroll {
+    gap: 0;
+    overflow: visible;
+  }
+  .nav a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 9px 2px 8px;
+    font-size: 10.5px;
+    letter-spacing: 0.01em;
+  }
+  .nav a[aria-current='page'] {
+    color: var(--accent);
+  }
+  .nav-ind {
+    display: none;
+  }
+  .nav-glyph {
+    font-size: 17px;
+    line-height: 1;
+  }
+  .stage {
+    perspective: 1000px;
+    margin-top: 14px;
+  }
+  .pager {
+    display: none;
+  }
+  .tiles {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .tiles .tile:last-child {
+    grid-column: 1 / -1;
+  }
+  .tile {
+    padding: 12px 13px;
+  }
+  .tile-val {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 901px) {
+  .nav-glyph {
+    display: none;
+  }
+}
